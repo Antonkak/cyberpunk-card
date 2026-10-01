@@ -231,172 +231,100 @@
             font-weight: 700;
         }
 
-        /* Override Button */
-        .override-btn {
-            display: block;
-            width: fit-content;
-            margin: 30px auto;
-            padding: 12px 35px;
-            background: transparent;
-            color: var(--arasaka-red);
-            border: 2px solid var(--arasaka-red);
-            font-family: 'Orbitron', monospace;
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            text-decoration: none;
-        }
-
-        .override-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: var(--arasaka-red);
-            transition: left 0.5s ease;
-            z-index: -1;
-        }
-
-        .override-btn:hover::before {
-            left: 0;
-        }
-
-        .override-btn:hover {
-            color: var(--arasaka-bg);
-            box-shadow: 0 0 20px var(--arasaka-red);
-        }
-
-        /* Modal Overlay */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .hack-modal {
-            background: rgba(13, 13, 13, 0.95);
-            border: 2px solid var(--arasaka-red);
-            border-radius: 8px;
-            padding: 35px;
-            width: 90%;
-            max-width: 500px;
+        /* Net-Deck Status Block */
+        .netdeck-status {
+            background: rgba(255, 0, 60, 0.08);
+            border: 1px solid var(--arasaka-red);
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 30px;
             text-align: center;
-            box-shadow: 0 0 30px rgba(255, 0, 60, 0.5);
-            position: relative;
         }
 
-        .hack-modal h2 {
-            font-size: 1.3rem;
+        .netdeck-status .status-line {
+            font-size: 1.1rem;
+            color: var(--text-white);
+            margin: 10px 0;
+            letter-spacing: 1px;
+        }
+
+        .netdeck-status .status-line.disabled {
             color: var(--arasaka-red);
-            margin-bottom: 25px;
+        }
+
+        .netdeck-status .status-line.waiting {
+            color: var(--er-yellow);
+            animation: blink 1.5s step-end infinite;
+        }
+
+        .netdeck-status .status-line.connected {
+            color: var(--er-cyan);
+        }
+
+        .netdeck-status .status-label {
+            color: var(--text-gray);
+            font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 2px;
+            margin-bottom: 15px;
         }
 
-        .hack-modal h2 .blink {
-            animation: blink 1s step-end infinite;
-        }
-
-        .hack-modal .form-group {
-            margin-bottom: 20px;
-        }
-
-        .hack-modal input {
-            width: 100%;
-            padding: 12px 15px;
-            background: var(--arasaka-bg);
-            border: 1px solid var(--border-color);
-            border-top: 2px solid var(--arasaka-red);
-            border-bottom: 2px solid var(--arasaka-red);
-            color: var(--text-white);
-            font-family: 'Orbitron', monospace;
-            font-size: 1.2rem;
+        /* Session Info Display */
+        .session-info {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid var(--er-cyan);
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 25px;
             text-align: center;
-            letter-spacing: 5px;
-            outline: none;
-            transition: all 0.3s ease;
         }
 
-        .hack-modal input:focus {
-            border-color: var(--arasaka-red);
-            box-shadow: 0 0 15px var(--arasaka-red);
+        .session-info .session-label {
+            color: var(--text-gray);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
         }
 
-        .hack-modal input.error {
-            animation: shake 0.5s;
-            border-color: var(--arasaka-red);
-            box-shadow: 0 0 15px var(--arasaka-red);
+        .session-info .session-id {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3rem;
+            color: var(--er-yellow);
+            letter-spacing: 3px;
+            background: var(--er-black);
+            border: 1px solid var(--er-cyan);
+            padding: 10px 20px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 15px;
+            word-break: break-all;
         }
 
-        .hack-modal .error-msg {
-            color: var(--arasaka-red);
+        .session-info .mobile-url {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            color: var(--er-cyan);
+            word-break: break-all;
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--arasaka-bg);
+            border: 1px dashed var(--border-color);
+            border-radius: 4px;
+        }
+
+        .session-info .connection-status {
             margin-top: 15px;
             font-size: 0.9rem;
-            opacity: 0;
-            transition: opacity 0.3s ease;
         }
 
-        .hack-modal .error-msg.show {
-            opacity: 1;
+        .session-info .connection-status.connected {
+            color: var(--er-cyan);
         }
 
-        .hack-modal .btn-group {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 25px;
-        }
-
-        .hack-modal .btn {
-            padding: 10px 25px;
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-white);
-            font-family: 'Orbitron', monospace;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .hack-modal .btn-submit {
-            border-color: var(--arasaka-red);
-            color: var(--arasaka-red);
-        }
-
-        .hack-modal .btn-submit:hover {
-            background: var(--arasaka-red);
-            color: var(--arasaka-bg);
-            box-shadow: 0 0 15px var(--arasaka-red);
-        }
-
-        .hack-modal .btn-close {
-            border-color: var(--text-gray);
-        }
-
-        .hack-modal .btn-close:hover {
-            border-color: var(--text-white);
-            color: var(--text-white);
+        .session-info .connection-status.waiting {
+            color: var(--er-yellow);
+            animation: blink 1.5s step-end infinite;
         }
 
         /* Edgerunners Theme */
@@ -730,14 +658,6 @@
             50% { opacity: 0; }
         }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-8px); }
-            40% { transform: translateX(8px); }
-            60% { transform: translateX(-8px); }
-            80% { transform: translateX(8px); }
-        }
-
         @keyframes fadeIn {
             to { opacity: 1; }
         }
@@ -754,6 +674,14 @@
             .volume-container {
                 justify-content: center;
             }
+            .terminal-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            .header-title {
+                font-size: 1.1rem;
+            }
         }
     </style>
 </head>
@@ -761,7 +689,7 @@
     <div class="matrix-bg"></div>
     <div class="scanlines"></div>
 
-    <!-- Stage 1: Arasaka Terminal -->
+    <!-- Stage 1: Arasaka Terminal (Desktop) -->
     <header class="terminal-header">
         <div class="header-title">
             <img src="resourses/Arasaka_Logo_CP2077.webp" alt="ARASAKA Logo" class="header-logo">
@@ -803,29 +731,38 @@
             <div class="risk-text">[ CRITICAL ]</div>
         </div>
 
-        <a href="#" class="override-btn" id="override-btn">
-            [ OVERRIDE TERMINAL / HACK ]
-        </a>
+        <!-- Net-Deck Connection Status -->
+        <div class="netdeck-status">
+            <div class="status-label">NET-DECK INTERFACE STATUS</div>
+            <div class="status-line">[ ARASAKA SECURITY SYSTEM ACTIVE ]</div>
+            <div class="status-line disabled">[ OVERRIDE INPUT: DISABLED ]</div>
+            <div class="status-line waiting" id="netdeck-waiting">[ WAITING FOR NET-DECK URL... ]</div>
+            <div class="status-line connected" id="netdeck-connected" style="display: none;">[ NET-DECK LINK: ESTABLISHED ]</div>
+        </div>
+
+        <!-- Session Info Display -->
+        <div class="session-info">
+            <div class="session-label">NET-DECK SESSION ID</div>
+            <div class="session-id" id="session-id-display">READING URL PARAMETER...</div>
+            <div class="mobile-url" id="mobile-url-display" style="display: none;"></div>
+            <div class="connection-status waiting" id="connection-status">AWAITING NET-DECK HANDSHAKE...</div>
+        </div>
+
+        <!-- Arasaka Init Logs Container -->
+        <div id="arasaka-init-logs" style="
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: var(--arasaka-red);
+            z-index: 50;
+            opacity: 0.8;
+            pointer-events: none;
+        "></div>
     </main>
 
-    <!-- Stage 2: Hack Modal -->
-    <div class="modal-overlay" id="hack-modal-overlay">
-        <div class="hack-modal">
-            <h2>ENTER RUNNER ACCESS CODE: <span class="blink">_</span></h2>
-            <form class="hack-form" id="hack-form">
-                <div class="form-group">
-                    <input type="text" id="access-code" placeholder="····" autocomplete="off" maxlength="10">
-                    <div class="error-msg" id="error-msg">ACCESS DENIED // INVALID ENCRYPTION KEY</div>
-                </div>
-                <div class="btn-group">
-                    <button type="submit" class="btn btn-submit">SUBMIT</button>
-                    <button type="button" class="btn btn-close" id="btn-close">CANCEL</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Stage 3: Edgerunners Theme -->
+    <!-- Stage 3: Edgerunners Theme (Hidden until hacked) -->
     <div class="edgerunners-theme" id="edgerunners-theme">
         <header class="er-header">
             <h1>SYSTEM HACKED BY <span class="er-logo">ER</span></h1>
@@ -859,7 +796,7 @@
                 <div class="audio-player">
                     <div class="audio-track-info">
                         <div class="track-title">I Really Want to Stay at Your House</div>
-                        <div class="track-artist">Rosa Walton &amp; Hallie Coggins</div>
+                        <div class="track-artist">Rosa Walton & Hallie Coggins</div>
                     </div>
                     <div class="audio-controls">
                         <button class="play-btn" id="play-transmission">&#9654; PLAY</button>
@@ -887,174 +824,119 @@
             <img src="" alt="Blueprint" class="gallery-image" id="gallery-image">
             <div class="gallery-caption" id="gallery-caption"></div>
             <div class="gallery-controls">
-                <button class="gallery-nav-btn" id="gallery-prev">&lt; PREV</button>
-                <button class="gallery-nav-btn" id="gallery-next">NEXT &gt;</button>
+                <button class="gallery-nav-btn" id="gallery-prev">< PREV</button>
+                <button class="gallery-nav-btn" id="gallery-next">NEXT ></button>
             </div>
         </div>
     </div>
 
+    <!-- PeerJS CDN -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <!-- Shared Script -->
+    <script src="script.js"></script>
+    <!-- Desktop Script -->
     <script>
-        const overrideBtn = document.getElementById('override-btn');
-        const modalOverlay = document.getElementById('hack-modal-overlay');
-        const btnClose = document.getElementById('btn-close');
-        const accessCodeInput = document.getElementById('access-code');
-        const errorMsg = document.getElementById('error-msg');
-        const hackForm = document.getElementById('hack-form');
+        // DOM Elements
         const arasakaTerminal = document.getElementById('arasaka-terminal');
         const edgerunnersTheme = document.getElementById('edgerunners-theme');
         const devLogs = document.getElementById('dev-logs');
-        
-        const viewBlueprintsBtn = document.getElementById('view-blueprints');
-        const galleryOverlay = document.getElementById('gallery-overlay');
-        const galleryImage = document.getElementById('gallery-image');
-        const galleryCaption = document.getElementById('gallery-caption');
-        const galleryClose = document.getElementById('gallery-close');
-        const galleryPrev = document.getElementById('gallery-prev');
-        const galleryNext = document.getElementById('gallery-next');
+        const netdeckWaiting = document.getElementById('netdeck-waiting');
+        const netdeckConnected = document.getElementById('netdeck-connected');
+        const terminalHeader = document.querySelector('.terminal-header');
+        const sessionIdDisplay = document.getElementById('session-id-display');
+        const mobileUrlDisplay = document.getElementById('mobile-url-display');
+        const connectionStatus = document.getElementById('connection-status');
 
-        const playBtn = document.getElementById('play-transmission');
-        const audioPlayer = document.getElementById('audio-player');
-        const progressContainer = document.getElementById('progress-container');
-        const progressFill = document.getElementById('progress-fill');
-        const timeInfo = document.getElementById('time-info');
-        const volumeSlider = document.getElementById('volume-slider');
+        // Initialize
+        let cleanupArasakaLogs = null;
+        let desktopPeer = null;
 
-        const SECRET_CODE = "2077";
-
-        // Замените эти названия на реальные файлы чертежей в папке resourses/
-        const blueprints = [
-            "resourses/stage1_box_unfold.png",
-            "resourses/stage2_figma_mockup.png",
-            "resourses/stage3_paint_process.png"
-        ];
-        let currentBlueprintIndex = 0;
-        let arasakaLogContainer = null;
-
-        // Auto-type Arasaka Logs on page load
         document.addEventListener('DOMContentLoaded', () => {
-            const logMessages = [
-                "[ INIT ] ARASAKA Medical Terminal v3.2.1",
-                "[ SYS ] Loading secure protocols...",
-                "[ NET ] Connecting to Night City servers...",
-                "[ PKG ] Container #2077-IS-564 locked for transport...",
-                "[ STATUS ] Neural overload critical - awaiting override..."
-            ];
+            // Start Arasaka init logs
+            cleanupArasakaLogs = startArasakaInitLogs();
 
-            let index = 0;
-            arasakaLogContainer = document.createElement('div');
-            arasakaLogContainer.id = 'arasaka-init-logs';
-            arasakaLogContainer.style.cssText = `
-                position: fixed;
-                bottom: 20px;
-                left: 20px;
-                font-family: 'Courier New', monospace;
-                font-size: 0.8rem;
-                color: var(--arasaka-red);
-                z-index: 50;
-                opacity: 0.8;
-                pointer-events: none;
-            `;
-            document.body.appendChild(arasakaLogContainer);
+            // Initialize audio, gallery, shortcuts
+            initAudioPlayer();
+            initGallery();
+            initKeyboardShortcuts(null, () => {
+                document.getElementById('gallery-overlay')?.classList.remove('active');
+            });
 
-            const interval = setInterval(() => {
-                if (index < logMessages.length && arasakaLogContainer) {
-                    const p = document.createElement('p');
-                    p.textContent = logMessages[index];
-                    p.style.marginBottom = '4px';
-                    arasakaLogContainer.appendChild(p);
-                    index++;
-                } else {
-                    clearInterval(interval);
-                }
-            }, 800);
-        });
-
-        // Modal Logic
-        overrideBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            modalOverlay.classList.add('active');
-            accessCodeInput.value = '';
-            accessCodeInput.focus();
-        });
-
-        function closeModal() {
-            modalOverlay.classList.remove('active');
-            accessCodeInput.value = '';
-            errorMsg.classList.remove('show');
-            accessCodeInput.classList.remove('error');
-        }
-
-        btnClose.addEventListener('click', closeModal);
-
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) closeModal();
-        });
-
-        hackForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (accessCodeInput.value.trim() === SECRET_CODE) {
-                closeModal();
-                glitchEffect(() => switchToEdgerunners());
+            // Read target ID from URL
+            const targetId = getTargetPeerId();
+            
+            if (targetId) {
+                // URL has session ID - display it and connect
+                sessionIdDisplay.textContent = targetId;
+                mobileUrlDisplay.textContent = window.location.href;
+                mobileUrlDisplay.style.display = 'block';
+                
+                netdeckWaiting.style.display = 'none';
+                netdeckConnected.style.display = 'block';
+                connectionStatus.textContent = 'CONNECTING TO NET-DECK...';
+                connectionStatus.className = 'connection-status waiting';
+                
+                // Initialize PeerJS connection to mobile
+                desktopPeer = initDesktopPeer(targetId, async () => {
+                    // Valid override received from mobile
+                    await glitchEffect('NET-DECK SIGNAL RECEIVED\nOVERRIDE EXECUTED');
+                    switchToEdgerunners();
+                }, (logMessage) => {
+                    // Log callback for UI updates
+                    if (logMessage.includes('established') || logMessage.includes('link established')) {
+                        connectionStatus.textContent = 'NET-DECK LINK: ESTABLISHED';
+                        connectionStatus.className = 'connection-status connected';
+                    } else if (logMessage.includes('error')) {
+                        connectionStatus.textContent = 'CONNECTION FAILED - RETRYING...';
+                        connectionStatus.className = 'connection-status waiting';
+                    }
+                });
             } else {
-                errorMsg.classList.add('show');
-                accessCodeInput.classList.add('error');
-                accessCodeInput.focus();
-                setTimeout(() => {
-                    errorMsg.classList.remove('show');
-                    accessCodeInput.classList.remove('error');
-                }, 2500);
+                // No session ID in URL
+                sessionIdDisplay.textContent = 'NO SESSION ID IN URL';
+                connectionStatus.textContent = 'OPEN VIA NET-DECK LINK OR ADD ?id= PARAMETER';
+                connectionStatus.className = 'connection-status waiting';
             }
         });
-
-        // Glitch Transition Effect
-        function glitchEffect(callback) {
-            const glitchOverlay = document.createElement('div');
-            glitchOverlay.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: #000; z-index: 5000; display: flex; align-items: center;
-                justify-content: center; font-family: 'Orbitron', monospace;
-                color: #ff003c; font-size: 3rem; text-transform: uppercase; letter-spacing: 8px;
-            `;
-            glitchOverlay.innerHTML = 'SYSTEM OVERRIDE...';
-            document.body.appendChild(glitchOverlay);
-
-            let count = 0;
-            const interval = setInterval(() => {
-                glitchOverlay.style.transform = `translateX(${Math.random() * 20 - 10}px)`;
-                glitchOverlay.style.opacity = Math.random() > 0.2 ? 1 : 0;
-                glitchOverlay.style.color = Math.random() > 0.5 ? '#ff003c' : '#00ffff';
-                count++;
-
-                if (count >= 12) {
-                    clearInterval(interval);
-                    document.body.removeChild(glitchOverlay);
-                    callback();
-                }
-            }, 80);
-        }
 
         // Switch to Edgerunners Theme
-        function switchToEdgerunners() {
-            // Удаляем логи Арасаки
-            if (arasakaLogContainer) {
-                arasakaLogContainer.remove();
+        async function switchToEdgerunners() {
+            // Update connection status
+            if (connectionStatus) {
+                connectionStatus.textContent = 'NET-DECK CONNECTED - OVERRIDE EXECUTED';
+                connectionStatus.classList.add('connected');
             }
 
+            // Cleanup Arasaka logs
+            if (cleanupArasakaLogs) {
+                cleanupArasakaLogs();
+                cleanupArasakaLogs = null;
+            }
+
+            // Hide Arasaka UI
             arasakaTerminal.style.display = 'none';
-            document.querySelector('.terminal-header').style.display = 'none';
+            terminalHeader.style.display = 'none';
+
+            // Show Edgerunners UI
             edgerunnersTheme.classList.add('active');
 
-            audioPlayer.volume = volumeSlider.value / 100;
-            audioPlayer.play().then(() => {
-                playBtn.innerHTML = '&#10074;&#10074; PAUSE';
-            }).catch(e => console.log("Autoplay policy blocked sound:", e));
+            // Start audio
+            const audioPlayer = document.getElementById('audio-player');
+            const playBtn = document.getElementById('play-transmission');
+            const volumeSlider = document.getElementById('volume-slider');
+            
+            if (audioPlayer) {
+                audioPlayer.volume = volumeSlider ? volumeSlider.value / 100 : 0.5;
+                try {
+                    await audioPlayer.play();
+                    if (playBtn) playBtn.innerHTML = '&#10074;&#10074; PAUSE';
+                } catch (e) {
+                    console.log("Autoplay policy blocked sound:", e);
+                }
+            }
 
-            addDevLogs();
-        }
-
-        // Typewriter Dev Logs
-        function addDevLogs() {
-            const logs = [
+            // Add dev logs
+            await addDevLogs('dev-logs', [
                 "[ INIT ] Loading Edgerunners toolkit...",
                 "[ SYS ] Neural interface compromised...",
                 "[ NET ] Accessing Night City database...",
@@ -1062,106 +944,8 @@
                 "[ DONE ] Cyberpsychosis suppressants unlocked...",
                 "[ ALERT ] Arasaka corp security notified...",
                 "[ ESC ] Emergency exit routing established..."
-            ];
-
-            let index = 0;
-            const interval = setInterval(() => {
-                if (index < logs.length) {
-                    const log = document.createElement('div');
-                    log.className = 'dev-log';
-                    log.textContent = logs[index];
-                    devLogs.appendChild(log);
-                    index++;
-                } else {
-                    clearInterval(interval);
-                }
-            }, 350);
+            ]);
         }
-
-        // Blueprints Gallery
-        function updateGalleryImage() {
-            galleryImage.src = blueprints[currentBlueprintIndex];
-            const fileName = blueprints[currentBlueprintIndex].split('/').pop();
-            galleryCaption.textContent = `FILE [${currentBlueprintIndex + 1}/${blueprints.length}]: ${fileName}`;
-        }
-
-        viewBlueprintsBtn.addEventListener('click', () => {
-            currentBlueprintIndex = 0;
-            updateGalleryImage();
-            galleryOverlay.classList.add('active');
-        });
-
-        galleryPrev.addEventListener('click', () => {
-            currentBlueprintIndex = (currentBlueprintIndex - 1 + blueprints.length) % blueprints.length;
-            updateGalleryImage();
-        });
-
-        galleryNext.addEventListener('click', () => {
-            currentBlueprintIndex = (currentBlueprintIndex + 1) % blueprints.length;
-            updateGalleryImage();
-        });
-
-        function closeGallery() {
-            galleryOverlay.classList.remove('active');
-        }
-
-        galleryClose.addEventListener('click', closeGallery);
-        galleryOverlay.addEventListener('click', (e) => {
-            if (e.target === galleryOverlay) closeGallery();
-        });
-
-        // Audio Controls
-        playBtn.addEventListener('click', () => {
-            if (audioPlayer.paused) {
-                audioPlayer.play();
-                playBtn.innerHTML = '&#10074;&#10074; PAUSE';
-            } else {
-                audioPlayer.pause();
-                playBtn.innerHTML = '&#9654; PLAY';
-            }
-        });
-
-        function formatTime(seconds) {
-            if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
-            const min = Math.floor(seconds / 60);
-            const sec = Math.floor(seconds % 60);
-            return `${min}:${sec.toString().padStart(2, '0')}`;
-        }
-
-        audioPlayer.addEventListener('timeupdate', () => {
-            if (!audioPlayer.duration) return;
-            const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-            progressFill.style.width = `${percent}%`;
-            timeInfo.textContent = `${formatTime(audioPlayer.currentTime)} / ${formatTime(audioPlayer.duration)}`;
-        });
-
-        audioPlayer.addEventListener('loadedmetadata', () => {
-            timeInfo.textContent = `0:00 / ${formatTime(audioPlayer.duration)}`;
-        });
-
-        audioPlayer.addEventListener('ended', () => {
-            playBtn.innerHTML = '&#9654; PLAY';
-            progressFill.style.width = '0%';
-        });
-
-        progressContainer.addEventListener('click', (e) => {
-            if (!audioPlayer.duration) return;
-            const width = progressContainer.clientWidth;
-            const clickX = e.offsetX;
-            audioPlayer.currentTime = (clickX / width) * audioPlayer.duration;
-        });
-
-        volumeSlider.addEventListener('input', () => {
-            audioPlayer.volume = volumeSlider.value / 100;
-        });
-
-        // Shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeModal();
-                closeGallery();
-            }
-        });
     </script>
 </body>
 </html>
