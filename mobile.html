@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Net-Deck // Arasaka Override</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --arasaka-red: #ff003c;
+            --arasaka-bg: #080808;
+            --er-yellow: #fcee0a;
+            --er-cyan: #00ffff;
+            --er-pink: #ff00ff;
+            --er-black: #000000;
+            --text-white: #ffffff;
+            --text-gray: #a0a0a0;
+            --border-color: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Orbitron', monospace;
+            background-color: var(--arasaka-bg);
+            color: var(--text-white);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            padding: 20px;
+        }
+
+        .mobile-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 30% 30%, rgba(255, 0, 60, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 70% 70%, rgba(0, 255, 255, 0.05) 0%, transparent 40%),
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 20px,
+                    rgba(255, 0, 60, 0.03) 1px,
+                    rgba(255, 0, 60, 0.03) 20px
+                );
+            z-index: -1;
+        }
+
+        .mobile-scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    to bottom,
+                    rgba(0, 255, 255, 0.05),
+                    rgba(0, 255, 255, 0.05) 1px,
+                    transparent 1px,
+                    transparent 3px
+                );
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.2;
+        }
+
+        /* Header */
+        .mobile-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--arasaka-red);
+            box-shadow: 0 0 15px rgba(255, 0, 60, 0.2);
+        }
+
+        .mobile-header h1 {
+            font-size: 1.5rem;
+            color: var(--arasaka-red);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px var(--arasaka-red);
+        }
+
+        .mobile-header .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            letter-spacing: 1px;
+        }
+
+        .mobile-header .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .mobile-logo {
+            height: 24px;
+            width: auto;
+            filter: drop-shadow(0 0 3px var(--arasaka-red));
+        }
+
+        /* Session ID Display (Mobile generates it) */
+        .session-display {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid var(--er-cyan);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .session-display .session-label {
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .session-display .session-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            color: var(--er-yellow);
+            letter-spacing: 2px;
+            background: var(--er-black);
+            border: 1px solid var(--er-cyan);
+            padding: 12px 16px;
+            border-radius: 4px;
+            display: inline-block;
+            word-break: break-all;
+            margin-bottom: 15px;
+        }
+
+        .session-display .desktop-url {
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem;
+            color: var(--er-cyan);
+            word-break: break-all;
+            margin: 10px 0;
+            padding: 10px;
+            background: var(--arasaka-bg);
+            border: 1px dashed var(--border-color);
+            border-radius: 4px;
+        }
+
+        /* Status Section */
+        .status-section {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--border-color);
+            border-top: 2px solid var(--arasaka-red);
+            border-bottom: 2px solid var(--arasaka-red);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .status-section .status-title {
+            font-size: 1rem;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .status-section .status-value {
+            font-size: 1.4rem;
+            color: var(--er-yellow);
+            font-weight: 700;
+            margin: 8px 0;
+        }
+
+        .status-section .status-blink {
+            animation: blink 1.5s step-end infinite;
+        }
+
+        .status-section .status-value.connected {
+            color: var(--er-cyan);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 20px;
+            background: transparent;
+            color: var(--text-white);
+            border: 2px solid var(--border-color);
+            font-family: 'Orbitron', monospace;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .action-btn.primary {
+            border-color: var(--arasaka-red);
+            color: var(--arasaka-red);
+        }
+
+        .action-btn.primary:hover {
+            background: var(--arasaka-red);
+            color: var(--arasaka-bg);
+            box-shadow: 0 0 15px var(--arasaka-red);
+        }
+
+        .action-btn.secondary {
+            border-color: var(--er-cyan);
+            color: var(--er-cyan);
+        }
+
+        .action-btn.secondary:hover {
+            background: var(--er-cyan);
+            color: var(--er-black);
+            box-shadow: 0 0 15px var(--er-cyan);
+        }
+
+        .action-btn.danger {
+            border-color: var(--er-pink);
+            color: var(--er-pink);
+        }
+
+        .action-btn.danger:hover {
+            background: var(--er-pink);
+            color: var(--er-black);
+            box-shadow: 0 0 15px var(--er-pink);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Passcode Input */
+        .passcode-section {
+            margin-bottom: 20px;
+        }
+
+        .passcode-section h2 {
+            font-size: 1.1rem;
+            color: var(--text-gray);
+            text-align: center;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .passcode-input {
+            width: 100%;
+            padding: 16px;
+            background: var(--arasaka-bg);
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--arasaka-red);
+            border-bottom: 2px solid var(--arasaka-red);
+            color: var(--text-white);
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            text-align: center;
+            letter-spacing: 8px;
+            outline: none;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .passcode-input:focus {
+            border-color: var(--arasaka-red);
+            box-shadow: 0 0 15px var(--arasaka-red);
+        }
+
+        .passcode-input.error {
+            animation: shake 0.5s;
+            border-color: var(--arasaka-red);
+            box-shadow: 0 0 15px var(--arasaka-red);
+        }
+
+        .passcode-input:disabled {
+            opacity: 0.5;
+            background: var(--er-black);
+        }
+
+        .error-msg {
+            color: var(--arasaka-red);
+            text-align: center;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .error-msg.show {
+            opacity: 1;
+        }
+
+        /* Success Section */
+        .success-section {
+            text-align: center;
+            padding: 25px;
+            background: rgba(0, 255, 255, 0.08);
+            border: 1px solid var(--er-cyan);
+            border-radius: 6px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .success-section.active {
+            display: block;
+        }
+
+        .success-icon {
+            font-size: 3rem;
+            color: var(--er-yellow);
+            margin-bottom: 15px;
+            text-shadow: 0 0 15px var(--er-yellow);
+            animation: pulse 2s infinite alternate;
+        }
+
+        .success-title {
+            font-size: 1.3rem;
+            color: var(--er-cyan);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+
+        .success-message {
+            font-size: 1rem;
+            color: var(--er-yellow);
+        }
+
+        /* Log Section */
+        .log-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .log-section h3 {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            text-align: center;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .log-container {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            color: var(--er-cyan);
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            opacity: 0;
+            animation: fadeIn 0.3s forwards;
+        }
+
+        /* Animations */
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.85; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-8px); }
+            80% { transform: translateX(8px); }
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Responsive adjustments */
+        @media (max-height: 700px) {
+            .action-btn {
+                padding: 12px 16px;
+            }
+            .session-display .session-value {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-bg"></div>
+    <div class="mobile-scanlines"></div>
+
+    <!-- Header -->
+    <header class="mobile-header">
+        <h1>&#128274; NET-DECK TERMINAL</h1>
+        <div class="subtitle">ARASAKA CORP. // MEDICAL DIVISION</div>
+        <div class="logo-container">
+            <img src="resourses/Arasakalogo.webp" alt="ARASAKA" class="mobile-logo">
+        </div>
+    </header>
+
+    <!-- Session Display (Generated on Mobile) -->
+    <div class="session-display">
+        <div class="session-label">YOUR NET-DECK SESSION ID</div>
+        <div class="session-value" id="session-id-display">GENERATING...</div>
+        <div class="desktop-url" id="desktop-url-display">PREPARING TERMINAL LINK...</div>
+    </div>
+
+    <!-- Status Section -->
+    <div class="status-section">
+        <div class="status-title">CONNECTION STATUS</div>
+        <div class="status-value">
+            <span id="status-text" class="status-blink">INITIALIZING...</span>
+        </div>
+    </div>
+
+    <!-- Passcode Section -->
+    <div class="passcode-section">
+        <h2>ENTER ACCESS CODE</h2>
+        <input type="text" class="passcode-input" id="passcode" placeholder="····" maxlength="10" autocomplete="off" disabled>
+        <div class="error-msg" id="error-msg">ACCESS DENIED // INVALID ENCRYPTION KEY</div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <button class="action-btn danger" id="execute-btn" disabled>
+            [ EXECUTE OVERRIDE ]
+        </button>
+        <button class="action-btn secondary" id="share-btn">
+            &#128202; TRANSIT URL TO TERMINAL
+        </button>
+    </div>
+
+    <!-- Success Section -->
+    <div class="success-section" id="success-section">
+        <div class="success-icon">&#10004;</div>
+        <div class="success-title">ACCESS GRANTED</div>
+        <div class="success-message">Override signal sent to terminal</div>
+    </div>
+
+    <!-- Log Section -->
+    <div class="log-section">
+        <h3>[ SYSTEM LOG ]</h3>
+        <div class="log-container" id="log-container"></div>
+    </div>
+
+    <!-- PeerJS CDN -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <!-- Shared Script -->
+    <script src="script.js"></script>
+    <!-- Mobile Script -->
+    <script>
+        // DOM Elements
+        const passcodeInput = document.getElementById('passcode');
+        const executeBtn = document.getElementById('execute-btn');
+        const errorMsg = document.getElementById('error-msg');
+        const statusText = document.getElementById('status-text');
+        const successSection = document.getElementById('success-section');
+        const shareBtn = document.getElementById('share-btn');
+        const logContainer = document.getElementById('log-container');
+        const sessionIdDisplay = document.getElementById('session-id-display');
+        const desktopUrlDisplay = document.getElementById('desktop-url-display');
+
+        // Mobile PeerJS connection object
+        let mobilePeerConnection = null;
+        let isConnected = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            logContainer.innerHTML = '';
+            
+            // Initialize PeerJS - mobile generates session ID and listens
+            mobilePeerConnection = initMobilePeer(
+                // On connected (terminal connected to us)
+                () => {
+                    isConnected = true;
+                    updateStatus('TERMINAL CONNECTED', '', false);
+                    statusText.classList.add('connected');
+                    passcodeInput.disabled = false;
+                    executeBtn.disabled = false;
+                    addLog('[NET-DECK] Terminal linked - ready for override');
+                },
+                // On error
+                (err) => {
+                    addLog('[ERR] PeerJS error: ' + err.message);
+                    updateStatus('INIT FAILED', 'status-blink');
+                },
+                // On log
+                (message) => {
+                    addLog(message);
+                }
+            );
+
+            // Get session ID and desktop URL after peer initializes
+            setTimeout(() => {
+                if (mobilePeerConnection) {
+                    const sessionId = mobilePeerConnection.getSessionId();
+                    const desktopUrl = mobilePeerConnection.generateDesktopUrl();
+                    
+                    sessionIdDisplay.textContent = sessionId;
+                    desktopUrlDisplay.textContent = desktopUrl;
+                    
+                    addLog(`[NET-DECK] Session active: ${sessionId}`);
+                    addLog('[NET-DECK] Awaiting terminal connection...');
+                    updateStatus('LISTENING...', 'status-blink');
+                }
+            }, 500);
+
+            // Execute Override Button
+            executeBtn.addEventListener('click', () => {
+                if (!isConnected) {
+                    addLog('[ERR] No terminal connection');
+                    return;
+                }
+                
+                const code = passcodeInput.value.trim();
+                if (code === '2077') {
+                    addLog('[NET-DECK] Sending override signal...');
+                    const sent = mobilePeerConnection?.sendOverride(code);
+                    
+                    if (sent) {
+                        addLog('[NET-DECK] Override code accepted');
+                        addLog('[NET-DECK] Signal transmitted to terminal');
+                        successSection.classList.add('active');
+                        setTimeout(() => {
+                            successSection.classList.remove('active');
+                        }, 5000);
+                    } else {
+                        addLog('[ERR] Failed to send signal');
+                        passcodeInput.classList.add('error');
+                        errorMsg.classList.add('show');
+                        setTimeout(() => {
+                            errorMsg.classList.remove('show');
+                            passcodeInput.classList.remove('error');
+                        }, 2500);
+                    }
+                } else {
+                    addLog('[ERR] Invalid access code');
+                    passcodeInput.classList.add('error');
+                    errorMsg.classList.add('show');
+                    setTimeout(() => {
+                        errorMsg.classList.remove('show');
+                        passcodeInput.classList.remove('error');
+                    }, 2500);
+                }
+            });
+
+            // Share Button - sends the desktop URL with session ID
+            shareBtn.addEventListener('click', async () => {
+                if (mobilePeerConnection) {
+                    const url = mobilePeerConnection.generateDesktopUrl();
+                    addLog('[NET-DECK] Transiting URL to terminal...');
+                    await shareUrl(url);
+                    addLog('[NET-DECK] URL transit complete');
+                }
+            });
+
+            // Auto-submit on Enter
+            passcodeInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !executeBtn.disabled) {
+                    executeBtn.click();
+                }
+            });
+        });
+
+        // Helper functions
+        function updateStatus(text, blinkClass = 'status-blink', removeBlink = true) {
+            if (!statusText) return;
+            
+            statusText.textContent = text;
+            statusText.className = blinkClass;
+            if (removeBlink) {
+                statusText.classList.remove('status-blink');
+            } else {
+                statusText.classList.add('status-blink');
+            }
+        }
+
+        function addLog(message) {
+            if (!logContainer) return;
+            
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>
