@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARASAKA MEDICAL TERMINAL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --arasaka-red: #ff003c;
+            --arasaka-bg: #0d0d0d;
+            --er-yellow: #fcee0a;
+            --er-cyan: #00ffff;
+            --er-pink: #ff00ff;
+            --er-black: #000000;
+            --text-white: #ffffff;
+            --text-gray: #a0a0a0;
+            --border-color: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Orbitron', monospace;
+            background-color: var(--arasaka-bg);
+            color: var(--text-white);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Matrix-style background */
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 15px,
+                    rgba(255, 255, 255, 0.02) 1px,
+                    rgba(255, 255, 255, 0.02) 15px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    transparent,
+                    transparent 15px,
+                    rgba(255, 255, 255, 0.02) 1px,
+                    rgba(255, 255, 255, 0.02) 15px
+                );
+            z-index: -1;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    to bottom,
+                    rgba(0, 0, 0, 0.15),
+                    rgba(0, 0, 0, 0.15) 1px,
+                    transparent 1px,
+                    transparent 3px
+                );
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.3;
+        }
+
+        /* Arasaka Terminal Header */
+        .terminal-header {
+            background: linear-gradient(135deg, var(--arasaka-bg), #1a1a1a);
+            border-bottom: 2px solid var(--arasaka-red);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 0 20px rgba(255, 0, 60, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 1.4rem;
+            color: var(--arasaka-red);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo {
+            height: 28px;
+            width: auto;
+            filter: drop-shadow(0 0 5px var(--arasaka-red));
+        }
+
+        .lock-icon {
+            display: block;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 2rem;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Container Card */
+        .info-card {
+            background: rgba(13, 13, 13, 0.85);
+            border: 1px solid var(--border-color);
+            border-top: 2px solid var(--arasaka-red);
+            border-bottom: 2px solid var(--arasaka-red);
+            border-radius: 5px;
+            padding: 25px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 15px rgba(255, 0, 60, 0.1);
+        }
+
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, 
+                    transparent 0%, 
+                    rgba(255, 255, 255, 0.02) 50%, 
+                    transparent 100%
+                );
+            animation: shimmer 3s infinite;
+        }
+
+        .arasaka-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            height: auto;
+            opacity: 0.12;
+            z-index: 0;
+            filter: grayscale(100%) brightness(0.8) sepia(1) hue-rotate(-10deg) saturate(3);
+            pointer-events: none;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--border-color);
+            font-size: 1.05rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: var(--text-gray);
+        }
+
+        .info-value {
+            color: var(--text-white);
+            font-weight: 500;
+        }
+
+        .status-critical {
+            color: var(--arasaka-red);
+        }
+
+        /* Risk Indicator */
+        .risk-indicator {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .risk-label {
+            font-size: 1.2rem;
+            color: var(--arasaka-red);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: var(--arasaka-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill-red {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4d00, var(--arasaka-red));
+            width: 87%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px var(--arasaka-red);
+            animation: pulse 1s infinite alternate;
+        }
+
+        .risk-text {
+            font-size: 1.1rem;
+            color: var(--arasaka-red);
+            font-weight: 700;
+        }
+
+        /* Override Button */
+        .override-btn {
+            display: block;
+            width: fit-content;
+            margin: 30px auto;
+            padding: 12px 35px;
+            background: transparent;
+            color: var(--arasaka-red);
+            border: 2px solid var(--arasaka-red);
+            font-family: 'Orbitron', monospace;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .override-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--arasaka-red);
+            transition: left 0.5s ease;
+            z-index: -1;
+        }
+
+        .override-btn:hover::before {
+            left: 0;
+        }
+
+        .override-btn:hover {
+            color: var(--arasaka-bg);
+            box-shadow: 0 0 20px var(--arasaka-red);
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .hack-modal {
+            background: rgba(13, 13, 13, 0.95);
+            border: 2px solid var(--arasaka-red);
+            border-radius: 8px;
+            padding: 35px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 0, 60, 0.5);
+            position: relative;
+        }
+
+        .hack-modal h2 {
+            font-size: 1.3rem;
+            color: var(--arasaka-red);
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .hack-modal h2 .blink {
+            animation: blink 1s step-end infinite;
+        }
+
+        .hack-modal .form-group {
+            margin-bottom: 20px;
+        }
+
+        .hack-modal input {
+            width: 100%;
+            padding: 12px 15px;
+            background: var(--arasaka-bg);
+            border: 1px solid var(--border-color);
+            border-top: 2px solid var(--arasaka-red);
+            border-bottom: 2px solid var(--arasaka-red);
+            color: var(--text-white);
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 5px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .hack-modal input:focus {
+            border-color: var(--arasaka-red);
+            box-shadow: 0 0 15px var(--arasaka-red);
+        }
+
+        .hack-modal input.error {
+            animation: shake 0.5s;
+            border-color: var(--arasaka-red);
+            box-shadow: 0 0 15px var(--arasaka-red);
+        }
+
+        .hack-modal .error-msg {
+            color: var(--arasaka-red);
+            margin-top: 15px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .hack-modal .error-msg.show {
+            opacity: 1;
+        }
+
+        .hack-modal .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .hack-modal .btn {
+            padding: 10px 25px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-white);
+            font-family: 'Orbitron', monospace;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .hack-modal .btn-submit {
+            border-color: var(--arasaka-red);
+            color: var(--arasaka-red);
+        }
+
+        .hack-modal .btn-submit:hover {
+            background: var(--arasaka-red);
+            color: var(--arasaka-bg);
+            box-shadow: 0 0 15px var(--arasaka-red);
+        }
+
+        .hack-modal .btn-close {
+            border-color: var(--text-gray);
+        }
+
+        .hack-modal .btn-close:hover {
+            border-color: var(--text-white);
+            color: var(--text-white);
+        }
+
+        /* Edgerunners Theme */
+        .edgerunners-theme {
+            display: none;
+        }
+
+        .edgerunners-theme.active {
+            display: block;
+        }
+
+        .er-header {
+            background: linear-gradient(135deg, var(--er-black), #1a1a1a);
+            border-bottom: 3px solid var(--er-yellow);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 25px rgba(252, 238, 10, 0.4);
+        }
+
+        .er-header h1 {
+            font-size: 2rem;
+            color: var(--er-yellow);
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--er-yellow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .er-logo {
+            font-size: 1.8rem;
+            color: var(--er-cyan);
+            font-weight: 700;
+            text-shadow: 0 0 10px var(--er-cyan);
+        }
+
+        .er-content {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .er-section {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--er-cyan);
+            border-top: 2px solid var(--er-yellow);
+            border-bottom: 2px solid var(--er-yellow);
+            border-radius: 5px;
+            padding: 25px;
+            margin-bottom: 30px;
+            position: relative;
+            box-shadow: 0 0 20px rgba(252, 238, 10, 0.1);
+        }
+
+        .er-section h2 {
+            color: var(--er-cyan);
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px var(--er-cyan);
+        }
+
+        .cyber-status {
+            color: var(--er-yellow);
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .birthday-message {
+            text-align: center;
+            padding: 20px;
+            margin: 10px 0;
+            background: rgba(255, 0, 60, 0.15);
+            border: 1px dashed var(--er-pink);
+            border-radius: 5px;
+            font-size: 1.8rem;
+            color: var(--er-yellow);
+            text-shadow: 0 0 10px var(--er-yellow);
+            animation: pulse 2s infinite alternate;
+        }
+
+        /* Blueprints & Gallery */
+        .blueprints-section {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .blueprint-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: var(--er-cyan);
+            color: var(--er-black);
+            border: 2px solid var(--er-cyan);
+            font-family: 'Orbitron', monospace;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 700;
+            box-shadow: 0 0 15px var(--er-cyan);
+        }
+
+        .blueprint-btn:hover {
+            background: transparent;
+            color: var(--er-cyan);
+            box-shadow: 0 0 25px var(--er-cyan);
+        }
+
+        .gallery-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .gallery-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .gallery-container {
+            position: relative;
+            max-width: 90vw;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .gallery-image {
+            max-width: 100%;
+            max-height: 70vh;
+            border: 2px solid var(--er-yellow);
+            border-radius: 5px;
+            box-shadow: 0 0 30px var(--er-yellow);
+            object-fit: contain;
+        }
+
+        .gallery-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            align-items: center;
+        }
+
+        .gallery-nav-btn {
+            background: var(--er-yellow);
+            color: var(--er-black);
+            border: none;
+            padding: 8px 18px;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .gallery-nav-btn:hover {
+            background: var(--er-cyan);
+            box-shadow: 0 0 10px var(--er-cyan);
+        }
+
+        .gallery-caption {
+            color: var(--er-cyan);
+            font-size: 0.9rem;
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        .gallery-close {
+            position: absolute;
+            top: -45px;
+            right: 0;
+            background: var(--arasaka-red);
+            color: var(--text-white);
+            border: none;
+            padding: 8px 16px;
+            font-family: 'Orbitron', monospace;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        /* Audio Player */
+        .audio-player {
+            margin-top: 15px;
+        }
+
+        .audio-track-info {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .audio-track-info .track-title {
+            font-size: 1.1rem;
+            color: var(--er-yellow);
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .audio-track-info .track-artist {
+            font-size: 0.9rem;
+            color: var(--er-cyan);
+        }
+
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .play-btn {
+            background: var(--er-pink);
+            color: var(--er-black);
+            border: 2px solid var(--er-pink);
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 10px 18px;
+            transition: all 0.3s ease;
+            font-weight: 700;
+            box-shadow: 0 0 15px var(--er-pink);
+            white-space: nowrap;
+        }
+
+        .play-btn:hover {
+            background: transparent;
+            color: var(--er-pink);
+        }
+
+        .progress-container {
+            flex: 1;
+            background: var(--er-black);
+            height: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid var(--er-cyan);
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--er-cyan), var(--er-yellow));
+            border-radius: 4px;
+            width: 0%;
+            box-shadow: 0 0 5px var(--er-cyan);
+        }
+
+        .time-info {
+            font-size: 0.85rem;
+            color: var(--er-cyan);
+            min-width: 95px;
+            text-align: right;
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .volume-icon {
+            font-size: 1.1rem;
+            color: var(--er-pink);
+        }
+
+        .volume-slider {
+            width: 90px;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--er-black);
+            border-radius: 3px;
+            outline: none;
+            border: 1px solid var(--er-cyan);
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--er-yellow);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Dev Logs */
+        .dev-log {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: var(--er-cyan);
+            margin: 8px 0;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border-left: 3px solid var(--er-yellow);
+            opacity: 0;
+            animation: fadeIn 0.4s forwards;
+        }
+
+        /* Animations */
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.85; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-8px); }
+            80% { transform: translateX(8px); }
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .audio-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .time-info {
+                text-align: center;
+            }
+            .volume-container {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-bg"></div>
+    <div class="scanlines"></div>
+
+    <!-- Stage 1: Arasaka Terminal -->
+    <header class="terminal-header">
+        <div class="header-title">
+            <img src="resourses/Arasaka_Logo_CP2077.webp" alt="ARASAKA Logo" class="header-logo">
+            ARASAKA CORP. // MEDICAL
+        </div>
+        <div class="lock-icon">&#128274;</div>
+    </header>
+
+    <main class="container" id="arasaka-terminal">
+        <div class="info-card">
+            <img src="resourses/Arasaka+Logo,+Big+(RED).webp" alt="ARASAKA" class="arasaka-watermark">
+            <div class="info-row">
+                <span class="info-label">CONTAINER ID:</span>
+                <span class="info-value">#2077-IS-564</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">CARGO:</span>
+                <span class="info-value">IMMUNO-DEPRESSANTS</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">QTY:</span>
+                <span class="info-value">4 VIALS</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">BATCH:</span>
+                <span class="info-value">#AS-NC2077-IM</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">STATUS:</span>
+                <span class="info-value status-critical">IN TRANSIT / COMPROMISED</span>
+            </div>
+        </div>
+
+        <div class="risk-indicator">
+            <div class="risk-label">NEURAL OVERLOAD: 87%</div>
+            <div class="progress-bar">
+                <div class="progress-fill-red"></div>
+            </div>
+            <div class="risk-text">[ CRITICAL ]</div>
+        </div>
+
+        <a href="#" class="override-btn" id="override-btn">
+            [ OVERRIDE TERMINAL / HACK ]
+        </a>
+    </main>
+
+    <!-- Stage 2: Hack Modal -->
+    <div class="modal-overlay" id="hack-modal-overlay">
+        <div class="hack-modal">
+            <h2>ENTER RUNNER ACCESS CODE: <span class="blink">_</span></h2>
+            <form class="hack-form" id="hack-form">
+                <div class="form-group">
+                    <input type="text" id="access-code" placeholder="····" autocomplete="off" maxlength="10">
+                    <div class="error-msg" id="error-msg">ACCESS DENIED // INVALID ENCRYPTION KEY</div>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-submit">SUBMIT</button>
+                    <button type="button" class="btn btn-close" id="btn-close">CANCEL</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stage 3: Edgerunners Theme -->
+    <div class="edgerunners-theme" id="edgerunners-theme">
+        <header class="er-header">
+            <h1>SYSTEM HACKED BY <span class="er-logo">ER</span></h1>
+        </header>
+
+        <main class="er-content">
+            <div class="er-section">
+                <h2>Neuro-Status Report</h2>
+                <div class="cyber-status">CYBERPSYCHOSIS RISK REDUCED TO 0%</div>
+            </div>
+
+            <div class="er-section">
+                <h2>Personal Transmission</h2>
+                <div class="birthday-message">
+                    HAPPY BIRTHDAY, CHROMA! - FROM YOUR EDGERUNNERS
+                </div>
+            </div>
+
+            <div class="er-section">
+                <h2>Dev Logs / Figma Blueprints</h2>
+                <div id="dev-logs"></div>
+                <div class="blueprints-section">
+                    <button class="blueprint-btn" id="view-blueprints">
+                        [ VIEW PROJECT BLUEPRINTS ]
+                    </button>
+                </div>
+            </div>
+
+            <div class="er-section">
+                <h2>Transmission Audio</h2>
+                <div class="audio-player">
+                    <div class="audio-track-info">
+                        <div class="track-title">I Really Want to Stay at Your House</div>
+                        <div class="track-artist">Rosa Walton &amp; Hallie Coggins</div>
+                    </div>
+                    <div class="audio-controls">
+                        <button class="play-btn" id="play-transmission">&#9654; PLAY</button>
+                        <div class="progress-container" id="progress-container">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <div class="time-info" id="time-info">0:00 / 0:00</div>
+                    </div>
+                    <div class="volume-container">
+                        <span class="volume-icon">&#128266;</span>
+                        <input type="range" class="volume-slider" id="volume-slider" min="0" max="100" value="50">
+                    </div>
+                    <audio id="audio-player" preload="auto">
+                        <source src="resourses/stay_at_your_house.mp3" type="audio/mpeg">
+                    </audio>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Gallery Overlay -->
+    <div class="gallery-overlay" id="gallery-overlay">
+        <div class="gallery-container">
+            <button class="gallery-close" id="gallery-close">CLOSE [X]</button>
+            <img src="" alt="Blueprint" class="gallery-image" id="gallery-image">
+            <div class="gallery-caption" id="gallery-caption"></div>
+            <div class="gallery-controls">
+                <button class="gallery-nav-btn" id="gallery-prev">&lt; PREV</button>
+                <button class="gallery-nav-btn" id="gallery-next">NEXT &gt;</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const overrideBtn = document.getElementById('override-btn');
+        const modalOverlay = document.getElementById('hack-modal-overlay');
+        const btnClose = document.getElementById('btn-close');
+        const accessCodeInput = document.getElementById('access-code');
+        const errorMsg = document.getElementById('error-msg');
+        const hackForm = document.getElementById('hack-form');
+        const arasakaTerminal = document.getElementById('arasaka-terminal');
+        const edgerunnersTheme = document.getElementById('edgerunners-theme');
+        const devLogs = document.getElementById('dev-logs');
+        
+        const viewBlueprintsBtn = document.getElementById('view-blueprints');
+        const galleryOverlay = document.getElementById('gallery-overlay');
+        const galleryImage = document.getElementById('gallery-image');
+        const galleryCaption = document.getElementById('gallery-caption');
+        const galleryClose = document.getElementById('gallery-close');
+        const galleryPrev = document.getElementById('gallery-prev');
+        const galleryNext = document.getElementById('gallery-next');
+
+        const playBtn = document.getElementById('play-transmission');
+        const audioPlayer = document.getElementById('audio-player');
+        const progressContainer = document.getElementById('progress-container');
+        const progressFill = document.getElementById('progress-fill');
+        const timeInfo = document.getElementById('time-info');
+        const volumeSlider = document.getElementById('volume-slider');
+
+        const SECRET_CODE = "2077";
+
+        // Замените эти названия на реальные файлы чертежей в папке resourses/
+        const blueprints = [
+            "resourses/stage1_box_unfold.png",
+            "resourses/stage2_figma_mockup.png",
+            "resourses/stage3_paint_process.png"
+        ];
+        let currentBlueprintIndex = 0;
+        let arasakaLogContainer = null;
+
+        // Auto-type Arasaka Logs on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const logMessages = [
+                "[ INIT ] ARASAKA Medical Terminal v3.2.1",
+                "[ SYS ] Loading secure protocols...",
+                "[ NET ] Connecting to Night City servers...",
+                "[ PKG ] Container #2077-IS-564 locked for transport...",
+                "[ STATUS ] Neural overload critical - awaiting override..."
+            ];
+
+            let index = 0;
+            arasakaLogContainer = document.createElement('div');
+            arasakaLogContainer.id = 'arasaka-init-logs';
+            arasakaLogContainer.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                font-family: 'Courier New', monospace;
+                font-size: 0.8rem;
+                color: var(--arasaka-red);
+                z-index: 50;
+                opacity: 0.8;
+                pointer-events: none;
+            `;
+            document.body.appendChild(arasakaLogContainer);
+
+            const interval = setInterval(() => {
+                if (index < logMessages.length && arasakaLogContainer) {
+                    const p = document.createElement('p');
+                    p.textContent = logMessages[index];
+                    p.style.marginBottom = '4px';
+                    arasakaLogContainer.appendChild(p);
+                    index++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 800);
+        });
+
+        // Modal Logic
+        overrideBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            modalOverlay.classList.add('active');
+            accessCodeInput.value = '';
+            accessCodeInput.focus();
+        });
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            accessCodeInput.value = '';
+            errorMsg.classList.remove('show');
+            accessCodeInput.classList.remove('error');
+        }
+
+        btnClose.addEventListener('click', closeModal);
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+
+        hackForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (accessCodeInput.value.trim() === SECRET_CODE) {
+                closeModal();
+                glitchEffect(() => switchToEdgerunners());
+            } else {
+                errorMsg.classList.add('show');
+                accessCodeInput.classList.add('error');
+                accessCodeInput.focus();
+                setTimeout(() => {
+                    errorMsg.classList.remove('show');
+                    accessCodeInput.classList.remove('error');
+                }, 2500);
+            }
+        });
+
+        // Glitch Transition Effect
+        function glitchEffect(callback) {
+            const glitchOverlay = document.createElement('div');
+            glitchOverlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #000; z-index: 5000; display: flex; align-items: center;
+                justify-content: center; font-family: 'Orbitron', monospace;
+                color: #ff003c; font-size: 3rem; text-transform: uppercase; letter-spacing: 8px;
+            `;
+            glitchOverlay.innerHTML = 'SYSTEM OVERRIDE...';
+            document.body.appendChild(glitchOverlay);
+
+            let count = 0;
+            const interval = setInterval(() => {
+                glitchOverlay.style.transform = `translateX(${Math.random() * 20 - 10}px)`;
+                glitchOverlay.style.opacity = Math.random() > 0.2 ? 1 : 0;
+                glitchOverlay.style.color = Math.random() > 0.5 ? '#ff003c' : '#00ffff';
+                count++;
+
+                if (count >= 12) {
+                    clearInterval(interval);
+                    document.body.removeChild(glitchOverlay);
+                    callback();
+                }
+            }, 80);
+        }
+
+        // Switch to Edgerunners Theme
+        function switchToEdgerunners() {
+            // Удаляем логи Арасаки
+            if (arasakaLogContainer) {
+                arasakaLogContainer.remove();
+            }
+
+            arasakaTerminal.style.display = 'none';
+            document.querySelector('.terminal-header').style.display = 'none';
+            edgerunnersTheme.classList.add('active');
+
+            audioPlayer.volume = volumeSlider.value / 100;
+            audioPlayer.play().then(() => {
+                playBtn.innerHTML = '&#10074;&#10074; PAUSE';
+            }).catch(e => console.log("Autoplay policy blocked sound:", e));
+
+            addDevLogs();
+        }
+
+        // Typewriter Dev Logs
+        function addDevLogs() {
+            const logs = [
+                "[ INIT ] Loading Edgerunners toolkit...",
+                "[ SYS ] Neural interface compromised...",
+                "[ NET ] Accessing Night City database...",
+                "[ PKG ] Immunosuppressant protocols neutralized...",
+                "[ DONE ] Cyberpsychosis suppressants unlocked...",
+                "[ ALERT ] Arasaka corp security notified...",
+                "[ ESC ] Emergency exit routing established..."
+            ];
+
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index < logs.length) {
+                    const log = document.createElement('div');
+                    log.className = 'dev-log';
+                    log.textContent = logs[index];
+                    devLogs.appendChild(log);
+                    index++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 350);
+        }
+
+        // Blueprints Gallery
+        function updateGalleryImage() {
+            galleryImage.src = blueprints[currentBlueprintIndex];
+            const fileName = blueprints[currentBlueprintIndex].split('/').pop();
+            galleryCaption.textContent = `FILE [${currentBlueprintIndex + 1}/${blueprints.length}]: ${fileName}`;
+        }
+
+        viewBlueprintsBtn.addEventListener('click', () => {
+            currentBlueprintIndex = 0;
+            updateGalleryImage();
+            galleryOverlay.classList.add('active');
+        });
+
+        galleryPrev.addEventListener('click', () => {
+            currentBlueprintIndex = (currentBlueprintIndex - 1 + blueprints.length) % blueprints.length;
+            updateGalleryImage();
+        });
+
+        galleryNext.addEventListener('click', () => {
+            currentBlueprintIndex = (currentBlueprintIndex + 1) % blueprints.length;
+            updateGalleryImage();
+        });
+
+        function closeGallery() {
+            galleryOverlay.classList.remove('active');
+        }
+
+        galleryClose.addEventListener('click', closeGallery);
+        galleryOverlay.addEventListener('click', (e) => {
+            if (e.target === galleryOverlay) closeGallery();
+        });
+
+        // Audio Controls
+        playBtn.addEventListener('click', () => {
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                playBtn.innerHTML = '&#10074;&#10074; PAUSE';
+            } else {
+                audioPlayer.pause();
+                playBtn.innerHTML = '&#9654; PLAY';
+            }
+        });
+
+        function formatTime(seconds) {
+            if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
+            const min = Math.floor(seconds / 60);
+            const sec = Math.floor(seconds % 60);
+            return `${min}:${sec.toString().padStart(2, '0')}`;
+        }
+
+        audioPlayer.addEventListener('timeupdate', () => {
+            if (!audioPlayer.duration) return;
+            const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            progressFill.style.width = `${percent}%`;
+            timeInfo.textContent = `${formatTime(audioPlayer.currentTime)} / ${formatTime(audioPlayer.duration)}`;
+        });
+
+        audioPlayer.addEventListener('loadedmetadata', () => {
+            timeInfo.textContent = `0:00 / ${formatTime(audioPlayer.duration)}`;
+        });
+
+        audioPlayer.addEventListener('ended', () => {
+            playBtn.innerHTML = '&#9654; PLAY';
+            progressFill.style.width = '0%';
+        });
+
+        progressContainer.addEventListener('click', (e) => {
+            if (!audioPlayer.duration) return;
+            const width = progressContainer.clientWidth;
+            const clickX = e.offsetX;
+            audioPlayer.currentTime = (clickX / width) * audioPlayer.duration;
+        });
+
+        volumeSlider.addEventListener('input', () => {
+            audioPlayer.volume = volumeSlider.value / 100;
+        });
+
+        // Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeGallery();
+            }
+        });
+    </script>
+</body>
+</html>
