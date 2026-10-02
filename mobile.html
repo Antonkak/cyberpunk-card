@@ -480,8 +480,6 @@
         <div class="log-container" id="log-container"></div>
     </div>
 
-    <!-- PeerJS CDN -->
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <!-- Shared Script -->
     <script src="script.js"></script>
     <!-- Mobile Script -->
@@ -497,17 +495,17 @@
         const sessionIdDisplay = document.getElementById('session-id-display');
         const desktopUrlDisplay = document.getElementById('desktop-url-display');
 
-        // Mobile PeerJS connection object
-        let mobilePeerConnection = null;
+        // Mobile WSS connection object
+        let mobileClient = null;
         let isConnected = false;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             logContainer.innerHTML = '';
             
-            // Initialize PeerJS - mobile generates session ID and listens
-            mobilePeerConnection = initMobilePeer(
-                // On connected (terminal connected to us)
+            // Initialize WebSocket client - mobile generates session ID and connects
+            mobileClient = initMobileClient(
+                // On terminal connected (desktop joined the room)
                 () => {
                     isConnected = true;
                     updateStatus('TERMINAL CONNECTED', '', false);
@@ -518,7 +516,7 @@
                 },
                 // On error
                 (err) => {
-                    addLog('[ERR] PeerJS error: ' + err.message);
+                    addLog('[ERR] WebSocket error: ' + err.message);
                     updateStatus('INIT FAILED', 'status-blink');
                 },
                 // On log
@@ -527,11 +525,11 @@
                 }
             );
 
-            // Get session ID and desktop URL after peer initializes
+            // Get session ID and desktop URL after client initializes
             setTimeout(() => {
-                if (mobilePeerConnection) {
-                    const sessionId = mobilePeerConnection.getSessionId();
-                    const desktopUrl = mobilePeerConnection.generateDesktopUrl();
+                if (mobileClient) {
+                    const sessionId = mobileClient.getSessionId();
+                    const desktopUrl = mobileClient.generateDesktopUrl();
                     
                     sessionIdDisplay.textContent = sessionId;
                     desktopUrlDisplay.textContent = desktopUrl;
@@ -552,7 +550,7 @@
                 const code = passcodeInput.value.trim();
                 if (code === '2077') {
                     addLog('[NET-DECK] Sending override signal...');
-                    const sent = mobilePeerConnection?.sendOverride(code);
+                    const sent = mobileClient?.wssClient?.sendOverride(code) || false;
                     
                     if (sent) {
                         addLog('[NET-DECK] Override code accepted');
@@ -583,8 +581,8 @@
 
             // Share Button - sends the desktop URL with session ID
             shareBtn.addEventListener('click', async () => {
-                if (mobilePeerConnection) {
-                    const url = mobilePeerConnection.generateDesktopUrl();
+                if (mobileClient) {
+                    const url = mobileClient.generateDesktopUrl();
                     addLog('[NET-DECK] Transiting URL to terminal...');
                     await shareUrl(url);
                     addLog('[NET-DECK] URL transit complete');
