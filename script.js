@@ -304,9 +304,10 @@ function initDesktopPeer(targetMobileId, onOverrideCallback) {
         console.log(`[DESKTOP] Connection attempt ${connectionAttempts}/${MAX_CONNECTION_ATTEMPTS} to ${targetMobileId}`);
 
         conn = desktopPeer.connect(targetMobileId, { reliable: true });
+        console.log('[DESKTOP] Connection object created, conn.open:', conn.open, '| conn.peerConnection:', !!conn.peerConnection);
 
         conn.on('open', () => {
-            console.log('[DESKTOP] P2P Connection established!');
+            console.log('[DESKTOP] P2P Connection FULLY ESTABLISHED!');
             updateDesktopStatus(true);
             connectionAttempts = 0; // Reset on success
         });
@@ -322,7 +323,7 @@ function initDesktopPeer(targetMobileId, onOverrideCallback) {
         });
 
         conn.on('error', (err) => {
-            console.error('[DESKTOP] Connection error:', err);
+            console.error('[DESKTOP] Connection error:', err, '| type:', err.type);
         });
 
         conn.on('close', () => {
@@ -434,10 +435,16 @@ function initMobilePeer(onConnectedCallback, onErrorCallback, onLogCallback) {
 
     // Handle INCOMING connections from Desktop
     peer.on('connection', (conn) => {
-        console.log('[MOBILE] Terminal connected:', conn.peer);
+        console.log('[MOBILE] Incoming connection from Desktop:', conn.peer, '| conn.open:', conn.open);
         connections.add(conn);
-        onLogCallback?.('[NET-DECK] Terminal connected');
-        onConnectedCallback?.();
+        onLogCallback?.('[NET-DECK] Terminal connecting...');
+        
+        // CRITICAL: Wait for connection to fully open before marking as connected
+        conn.on('open', () => {
+            console.log('[MOBILE] Connection FULLY OPEN with Desktop:', conn.peer);
+            onLogCallback?.('[NET-DECK] Terminal connected');
+            onConnectedCallback?.();
+        });
 
         conn.on('data', (data) => {
             console.log('[MOBILE] Data from terminal:', data);
@@ -478,16 +485,20 @@ function initMobilePeer(onConnectedCallback, onErrorCallback, onLogCallback) {
 
     // Send OVERRIDE to ALL active connections
     function sendOverride(code) {
+        console.log('[MOBILE] sendOverride called, connections count:', connections.size);
         let sent = false;
-        connections.forEach(conn => {
+        connections.forEach((conn, idx) => {
+            console.log(`[MOBILE] Connection ${idx}: open=${conn.open}, peer=${conn.peer}, peerConnection=${!!conn.peerConnection}`);
             if (conn && conn.open) {
                 conn.send({ action: 'OVERRIDE', code });
                 console.log('[MOBILE] Override sent to terminal:', code);
                 sent = true;
+            } else {
+                console.warn('[MOBILE] Connection not ready for sending:', { open: conn?.open, peer: conn?.peer });
             }
         });
         if (!sent) {
-            console.warn('[MOBILE] Cannot send override - no active connections');
+            console.warn('[MOBILE] Cannot send override - no active connections with open data channel');
         }
         return sent;
     }
