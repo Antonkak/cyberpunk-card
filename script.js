@@ -448,11 +448,11 @@ function initMobilePeer(onConnectedCallback, onErrorCallback, onLogCallback) {
     }
 
     // Use the shared generateDesktopUrl function
-    function generateDesktopUrl() {
+    function generateDesktopUrlWrapper() {
         return generateDesktopUrl(sessionId);
     }
 
-    return { sendOverride, getSessionId, generateDesktopUrl, peer };
+    return { sendOverride, getSessionId, generateDesktopUrl: generateDesktopUrlWrapper, peer };
 }
 
 // --- Share URL (Mobile) ---
