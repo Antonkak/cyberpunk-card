@@ -876,12 +876,14 @@
                 connectionStatus.textContent = 'CONNECTING TO NET-DECK...';
                 connectionStatus.className = 'connection-status waiting';
                 
-// Initialize PeerJS connection to mobile
-            desktopPeer = initDesktopPeer(targetId, async () => {
-                // Valid override received from mobile
-                await glitchEffect('NET-DECK SIGNAL RECEIVED\nOVERRIDE EXECUTED');
-                switchToEdgerunners();
-            });
+                console.log('[DESKTOP] Target Mobile ID found in URL:', targetId);
+                
+                // Initialize PeerJS connection to mobile
+                desktopPeer = initDesktopPeer(targetId, async () => {
+                    // Valid override received from mobile
+                    await glitchEffect('NET-DECK SIGNAL RECEIVED\nOVERRIDE EXECUTED');
+                    switchToEdgerunners();
+                });
             } else {
                 // No session ID in URL
                 sessionIdDisplay.textContent = 'NO SESSION ID IN URL';
