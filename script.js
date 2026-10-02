@@ -17,6 +17,7 @@ const PEER_OPTIONS = {
     port: 443,
     path: '/myapp',
     secure: true,
+    pingInterval: 5000, // Keeps WebSocket connection alive on mobile devices
     config: {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
@@ -39,9 +40,15 @@ function getBackoffDelay(attempt) {
     return delay;
 }
 
-// Generate random session ID
+// Generate persistent session ID stored in sessionStorage
 function generateSessionId() {
-    return 'arasaka-' + Math.random().toString(36).substring(2, 8);
+    let sessionId = sessionStorage.getItem('mobile_peer_id');
+    if (!sessionId) {
+        sessionId = 'arasaka-' + Math.random().toString(36).substring(2, 8);
+        sessionStorage.setItem('mobile_peer_id', sessionId);
+    }
+    console.log('[SESSION] Active Session ID:', sessionId);
+    return sessionId;
 }
 
 // Extract target peer ID from URL parameters
@@ -281,6 +288,254 @@ function updateDesktopStatus(connected) {
                 el.textContent = '[ NET-DECK LINK: ESTABLISHED ]';
                 el.style.color = '#00f0ff';
                 el.classList.remove('waiting');
+                el.classList.add('connected');
+            }
+        }
+    });
+}
+
+// --- PeerJS Helper (Desktop - Connects to Mobile with Exponential Backoff) ---
+function initDesktopPeer(targetMobileId, onOverrideCallback, onLogCallback) {
+    if (typeof Peer === 'undefined') {
+        console.error('[DESKTOP] PeerJS not loaded');
+        onLogCallback?.('[ERR] PeerJS not loaded');
+        return null;
+    }
+
+    if (!targetMobileId) {
+        console.log('[DESKTOP] No target Mobile ID in URL');
+        return null;
+    }
+
+    console.log('[DESKTOP] Initializing PeerJS, will connect to Mobile:', targetMobileId);
+    onLogCallback?.(`[DESKTOP] Connecting to: ${targetMobileId}`);
+
+    // Desktop creates peer with auto-generated ID using PEER_OPTIONS config
+    const desktopPeer = new Peer(undefined, {
+        ...PEER_OPTIONS,
+        debug: 3
+    });
+    let conn = null;
+    let reconnectAttempts = 0;
+    let isReconnecting = false;
+    let reconnectTimer = null;
+
+    function attemptConnectToMobile() {
+        if (isReconnecting) {
+            console.log('[DESKTOP] Reconnection already in progress, skipping');
+            return;
+        }
+        if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+            console.error('[DESKTOP] Max reconnection attempts reached. Check if mobile is online.');
+            onLogCallback?.('[ERR] Max reconnection attempts reached. Restart page on both devices.');
+            return;
+        }
+
+        isReconnecting = true;
+        reconnectAttempts++;
+        const delay = reconnectAttempts === 1 ? 0 : getBackoffDelay(reconnectAttempts - 1);
+        
+        console.log(`[DESKTOP] Connection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} to ${targetMobileId}${delay > 0 ? ` in ${delay/1000}s` : ''}`);
+        onLogCallback?.(`[DESKTOP] Attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
+
+        if (delay > 0) {
+            reconnectTimer = setTimeout(() => {
+                makeConnectionAttempt();
+            }, delay);
+        } else {
+            makeConnectionAttempt();
+        }
+    }
+
+    function makeConnectionAttempt() {
+        console.log('[DESKTOP] Connecting to Mobile Net-Deck:', targetMobileId);
+        conn = desktopPeer.connect(targetMobileId, { reliable: true });
+
+        conn.on('open', () => {
+            console.log('[DESKTOP] P2P Connection FULLY ESTABLISHED!');
+            updateDesktopStatus(true);
+            onLogCallback?.('[DESKTOP] Connection established!');
+            
+            // Reset reconnection state on success
+            reconnectAttempts = 0;
+            isReconnecting = false;
+            clearTimeout(reconnectTimer);
+        });
+
+        conn.on('data', (data) => {
+            console.log('[DESKTOP] Received data:', data);
+            if (data.action === 'OVERRIDE' && data.code === SECRET_CODE) {
+                console.log('[DESKTOP] Valid OVERRIDE received from mobile');
+                onLogCallback?.('[DESKTOP] Override received! Hacking...');
+                if (typeof onOverrideCallback === 'function') {
+                    onOverrideCallback();
+                }
+            }
+        });
+
+        conn.on('error', (err) => {
+            console.error('[DESKTOP] Connection error:', err, '| type:', err.type);
+            onLogCallback?.(`[ERR] Connection error: ${err.message}`);
+        });
+
+        conn.on('close', () => {
+            console.log('[DESKTOP] Connection closed by mobile');
+            updateDesktopStatus(false);
+            onLogCallback?.('[DESKTOP] Connection lost, reconnecting...');
+            
+            // Schedule reconnection with backoff if not destroyed
+            if (!desktopPeer.destroyed) {
+                isReconnecting = false;
+                attemptConnectToMobile();
+            }
+        });
+    }
+
+    desktopPeer.on('open', (id) => {
+        console.log('[DESKTOP] Peer opened with ID:', id);
+        console.log('[DESKTOP] Connecting to Mobile Net-Deck:', targetMobileId);
+        
+        // Reset reconnection state when peer opens successfully
+        reconnectAttempts = 0;
+        isReconnecting = false;
+        
+        attemptConnectToMobile();
+    });
+
+    // Handle incoming connections (fallback if mobile connects to us)
+    desktopPeer.on('connection', (incomingConn) => {
+        console.log('[DESKTOP] Incoming connection from Mobile:', incomingConn.peer);
+        onLogCallback?.('[DESKTOP] Incoming terminal connection');
+
+        conn = incomingConn;
+        const incomingId = incomingConn.peer;
+
+        incomingConn.on('open', () => {
+            console.log('[DESKTOP] Incoming connection from Mobile established!');
+            updateDesktopStatus(true);
+            onLogCallback?.('[DESKTOP] Terminal link established');
+            
+            // Reset reconnection state on success
+            reconnectAttempts = 0;
+            isReconnecting = false;
+            clearTimeout(reconnectTimer);
+        });
+
+        incomingConn.on('data', (data) => {
+            console.log('[DESKTOP] Received data on incoming:', data);
+            if (data.action === 'OVERRIDE' && data.code === SECRET_CODE) {
+                console.log('[DESKTOP] Valid OVERRIDE received on incoming connection');
+                onLogCallback?.('[DESKTOP] Override received! Hacking...');
+                if (typeof onOverrideCallback === 'function') {
+                    onOverrideCallback();
+                }
+            }
+        });
+
+        incomingConn.on('close', () => {
+            console.log('[DESKTOP] Incoming connection closed');
+            updateDesktopStatus(false);
+        });
+
+        incomingConn.on('error', (err) => {
+            console.error('[DESKTOP] Incoming connection error:', err);
+        });
+    });
+
+    desktopPeer.on('error', (err) => {
+        console.error('[DESKTOP] Peer error:', err, '| type:', err.type, '| message:', err.message);
+        onLogCallback?.(`[ERR] Peer error: ${err.message}`);
+        if (err.type === 'server-error' || err.message?.includes('403') || err.message?.includes('Forbidden')) {
+            console.error('[DESKTOP] SIGNALING SERVER ERROR: 403 Forbidden - Check PEER_OPTIONS host/port');
+            onLogCallback?.('[ERR] Signaling server error (403) - check config');
+        }
+    });
+
+    desktopPeer.on('disconnected', () => {
+        console.log('[DESKTOP] Disconnected from signaling server');
+        onLogCallback?.('[DESKTOP] Disconnected from signaling server');
+        
+        // Prevent recursive reconnect loop
+        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+            console.log('[DESKTOP] Attempting signaling server reconnect...');
+            isReconnecting = false;
+            attemptConnectToMobile();
+        } else {
+            console.error('[DESKTOP] Max attempts reached, stopping reconnect loop');
+            onLogCallback?.('[ERR] Max attempts reached. Reload page to retry.');
+        }
+    });
+
+    desktopPeer.on('close', () => {
+        console.log('[DESKTOP] Peer destroyed');
+        clearTimeout(reconnectTimer);
+    });
+
+    return desktopPeer;
+}
+
+// --- PeerJS Helper (Mobile - Listens for Desktop with Exponential Backoff) ---
+function initMobilePeer(onConnectedCallback, onErrorCallback, onLogCallback) {
+    if (typeof Peer === 'undefined') {
+        console.error('[MOBILE] PeerJS not loaded');
+        onErrorCallback?.(new Error('PeerJS not loaded'));
+        onLogCallback?.('[ERR] PeerJS not loaded');
+        return null;
+    }
+
+    // Mobile generates/retrieves the persistent session ID and acts as LISTENER
+    const sessionId = generateSessionId();
+    console.log('[MOBILE] Net-Deck Session ID:', sessionId);
+    onLogCallback?.(`[NET-DECK] Session ID: ${sessionId}`);
+
+    // Pass sessionId as the first argument so PeerJS binds to our custom ID
+    const peer = new Peer(sessionId, {
+        ...PEER_OPTIONS,
+        debug: 3
+    });
+    let connections = new Set(); // Track all active connections
+    let reconnectAttempts = 0;
+    let isReconnecting = false;
+    let reconnectTimer = null;
+
+    // Handle visibility change - reconnect when tab becomes active again
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            if (peer.disconnected || peer.destroyed) {
+                console.log('[NET-DECK] Tab active again, reconnecting peer...');
+                onLogCallback?.('[NET-DECK] Tab focused, reconnecting...');
+                
+                if (!isReconnecting && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                    isReconnecting = true;
+                    reconnectAttempts++;
+                    peer.reconnect();
+                }
+            } else if (connections.size === 0) {
+                console.log('[NET-DECK] Tab active, waiting for terminal...');
+                onLogCallback?.('[NET-DECK] Tab active, awaiting terminal...');
+            }
+        } else {
+            console.log('[NET-DECK] Tab hidden, keeping connection alive...');
+        }
+    });
+
+    peer.on('open', (id) => {
+        console.log('[MOBILE] Peer listening on ID:', id);
+        onLogCallback?.(`[NET-DECK] Listening for terminal...`);
+        
+        // Reset reconnection state when peer opens successfully
+        reconnectAttempts = 0;
+        isReconnecting = false;
+        clearTimeout(reconnectTimer);
+    });
+
+    // Handle INCOMING connections from Desktop
+    peer.on('connection', (conn) => {
+        console.log('[MOBILE] Incoming connection from Desktop:', conn.peer, '| conn.open:', conn.open);
+        connections.add(conn);
+        onLogCallback?.('[NET-DECK] Terminal connecting...');
+
+    g');
                 el.classList.add('connected');
             }
         }
