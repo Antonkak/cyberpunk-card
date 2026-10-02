@@ -876,21 +876,12 @@
                 connectionStatus.textContent = 'CONNECTING TO NET-DECK...';
                 connectionStatus.className = 'connection-status waiting';
                 
-                // Initialize PeerJS connection to mobile
-                desktopPeer = initDesktopPeer(targetId, async () => {
-                    // Valid override received from mobile
-                    await glitchEffect('NET-DECK SIGNAL RECEIVED\nOVERRIDE EXECUTED');
-                    switchToEdgerunners();
-                }, (logMessage) => {
-                    // Log callback for UI updates
-                    if (logMessage.includes('established') || logMessage.includes('link established')) {
-                        connectionStatus.textContent = 'NET-DECK LINK: ESTABLISHED';
-                        connectionStatus.className = 'connection-status connected';
-                    } else if (logMessage.includes('error')) {
-                        connectionStatus.textContent = 'CONNECTION FAILED - RETRYING...';
-                        connectionStatus.className = 'connection-status waiting';
-                    }
-                });
+// Initialize PeerJS connection to mobile
+            desktopPeer = initDesktopPeer(targetId, async () => {
+                // Valid override received from mobile
+                await glitchEffect('NET-DECK SIGNAL RECEIVED\nOVERRIDE EXECUTED');
+                switchToEdgerunners();
+            });
             } else {
                 // No session ID in URL
                 sessionIdDisplay.textContent = 'NO SESSION ID IN URL';
