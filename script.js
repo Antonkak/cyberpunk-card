@@ -10,8 +10,13 @@ const BLUEPRINTS = [
     "resourses/stage3_paint_process.png"
 ];
 
-// PeerJS Configuration with expanded STUN servers for NAT traversal
-const PEER_CONFIG = {
+// PeerJS Signaling Server Configuration
+// Using peerjs.metered.ca (free, stable) instead of default 0.peerjs.com (403 Forbidden)
+const PEER_OPTIONS = {
+    host: 'peerjs.metered.ca',
+    port: 443,
+    path: '/',
+    secure: true,
     config: {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
@@ -20,10 +25,16 @@ const PEER_CONFIG = {
             { urls: 'stun:stun3.l.google.com:19302' },
             { urls: 'stun:stun4.l.google.com:19302' },
             { urls: 'stun:stun.cloudflare.com:3478' },
-            { urls: 'stun:stun.mit.de:3478' }
+            { urls: 'stun:stun.mit.de:3478' },
+            // Metered TURN servers for relay when STUN fails
+            { urls: 'turn:global.turn.metered.ca:443?transport=tcp', username: 'metered', credential: 'metered' },
+            { urls: 'turn:global.turn.metered.ca:443?transport=udp', username: 'metered', credential: 'metered' }
         ]
     }
 };
+
+// Debug: log which signaling server we're using
+console.log('[PEER] Using signaling server:', PEER_OPTIONS.host, '| TURN relay enabled');
 
 // Generate random session ID
 function generateSessionId() {
@@ -287,8 +298,8 @@ function initDesktopPeer(targetMobileId, onOverrideCallback) {
 
     console.log('[DESKTOP] Initializing PeerJS, will connect to Mobile:', targetMobileId);
 
-    // Desktop creates peer with auto-generated ID
-    const desktopPeer = new Peer(undefined, PEER_CONFIG);
+    // Desktop creates peer with auto-generated ID using metered.ca signaling server
+    const desktopPeer = new Peer(undefined, PEER_OPTIONS);
     let conn = null;
     let connectionAttempts = 0;
     const MAX_CONNECTION_ATTEMPTS = 5;
@@ -376,7 +387,14 @@ function initDesktopPeer(targetMobileId, onOverrideCallback) {
     });
 
     desktopPeer.on('error', (err) => {
-        console.error('[DESKTOP] Peer error:', err);
+        console.error('[DESKTOP] Peer error:', err, '| type:', err.type, '| message:', err.message);
+        // Handle 403 Forbidden from signaling server
+        if (err.type === 'server-error' || err.message?.includes('403') || err.message?.includes('Forbidden')) {
+            console.error('[DESKTOP] SIGNALING SERVER ERROR: 403 Forbidden - Check PEER_OPTIONS host/port');
+            if (typeof onOverrideCallback === 'function') {
+                // Could trigger UI notification here
+            }
+        }
     });
 
     desktopPeer.on('disconnected', () => {
@@ -408,7 +426,7 @@ function initMobilePeer(onConnectedCallback, onErrorCallback, onLogCallback) {
     console.log('[MOBILE] Net-Deck Session ID:', sessionId);
     onLogCallback?.(`[NET-DECK] Session ID: ${sessionId}`);
 
-    const peer = new Peer(sessionId, PEER_CONFIG);
+    const peer = new Peer(sessionId, PEER_OPTIONS);
     let connections = new Set(); // Track all active connections
 
     // Handle visibility change - reconnect when tab becomes active again
@@ -463,9 +481,14 @@ function initMobilePeer(onConnectedCallback, onErrorCallback, onLogCallback) {
     });
 
     peer.on('error', (err) => {
-        console.error('[MOBILE] Peer error:', err);
+        console.error('[MOBILE] Peer error:', err, '| type:', err.type, '| message:', err.message);
         onLogCallback?.(`[ERR] Peer error: ${err.message}`);
         onErrorCallback?.(err);
+        // Handle 403 Forbidden from signaling server
+        if (err.type === 'server-error' || err.message?.includes('403') || err.message?.includes('Forbidden')) {
+            console.error('[MOBILE] SIGNALING SERVER ERROR: 403 Forbidden - Check PEER_OPTIONS host/port');
+            onLogCallback?.('[ERR] Signaling server blocked (403) - check network/host');
+        }
     });
 
     peer.on('disconnected', () => {
