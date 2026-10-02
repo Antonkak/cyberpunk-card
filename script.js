@@ -28,7 +28,18 @@ function generateSessionId() {
 // Extract target peer ID from URL parameters
 function getTargetPeerId() {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('id') || null;
+    const id = urlParams.get('id');
+    console.log('[DESKTOP] Parsed target ID from URL:', id);
+    return id;
+}
+
+// Generate desktop URL that works on GitHub Pages (handles subfolder paths like /cyberpunk-card/)
+function generateDesktopUrl(sessionId) {
+    const currentPath = window.location.pathname;
+    const folderPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+    const desktopUrl = `${window.location.origin}${folderPath}index.html?id=${sessionId}`;
+    console.log('[NET-DECK] Formatted Desktop URL:', desktopUrl);
+    return desktopUrl;
 }
 
 // --- Utility Functions ---
@@ -436,8 +447,9 @@ function initMobilePeer(onConnectedCallback, onErrorCallback, onLogCallback) {
         return sessionId;
     }
 
+    // Use the shared generateDesktopUrl function
     function generateDesktopUrl() {
-        return `${window.location.origin}/index.html?id=${sessionId}`;
+        return generateDesktopUrl(sessionId);
     }
 
     return { sendOverride, getSessionId, generateDesktopUrl, peer };
