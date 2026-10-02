@@ -242,155 +242,194 @@ function startArasakaInitLogs(containerId = 'arasaka-init-logs') {
     };
 }
 
+// --- Update Desktop Connection Status UI ---
+function updateDesktopStatus(connected) {
+    const statusElements = document.querySelectorAll('.status-line, .connection-status, #netdeck-waiting, #netdeck-connected, #connection-status');
+    statusElements.forEach(el => {
+        if (connected) {
+            if (el.textContent.includes('WAITING') || el.textContent.includes('CONNECTING') || el.textContent.includes('AWAITING')) {
+                el.textContent = '[ NET-DECK LINK: ESTABLISHED ]';
+                el.style.color = '#00f0ff';
+                el.classList.remove('waiting');
+                el.classList.add('connected');
+            }
+        }
+    });
+}
+
 // --- PeerJS Helper (Desktop - Connects to Mobile) ---
-function initDesktopPeer(targetId, onOverrideCallback, onLogCallback) {
+function initDesktopPeer(targetMobileId, onOverrideCallback) {
     if (typeof Peer === 'undefined') {
-        console.error('[PEER] PeerJS not loaded');
-        onLogCallback?.('[ERR] PeerJS not loaded');
+        console.error('[DESKTOP] PeerJS not loaded');
         return null;
     }
 
-    if (!targetId) {
-        console.log('[PEER] No target ID in URL - waiting for net-deck link');
-        onLogCallback?.('[NET] Awaiting net-deck URL parameter...');
+    if (!targetMobileId) {
+        console.log('[DESKTOP] No target Mobile ID in URL');
         return null;
     }
 
-    console.log('[PEER] Desktop connecting to mobile:', targetId);
-    onLogCallback?.(`[NET] Connecting to net-deck: ${targetId}`);
+    console.log('[DESKTOP] Initializing PeerJS, will connect to Mobile:', targetMobileId);
 
-    // Desktop auto-generates its own ID, connects to mobile's fixed ID
-    const peer = new Peer(undefined, PEER_CONFIG);
+    // Desktop creates peer with auto-generated ID
+    const desktopPeer = new Peer(undefined, PEER_CONFIG);
     let conn = null;
 
-    peer.on('open', (id) => {
-        console.log('[PEER] Desktop peer registered with ID:', id);
-        onLogCallback?.(`[NET] Terminal initialized (ID: ${id})`);
-        
-        // Connect to mobile after registration
-        conn = peer.connect(targetId, { reliable: true });
-        
+    desktopPeer.on('open', (id) => {
+        console.log('[DESKTOP] Peer opened with ID:', id);
+        console.log('[DESKTOP] Connecting to Mobile Net-Deck:', targetMobileId);
+
+        // CRITICAL: Connect STRICTLY inside 'open' event
+        conn = desktopPeer.connect(targetMobileId, { reliable: true });
+
         conn.on('open', () => {
-            console.log('[PEER] Connected to net-deck:', targetId);
-            onLogCallback?.('[NET] Net-deck link established');
+            console.log('[DESKTOP] P2P Connection established!');
+            updateDesktopStatus(true);
         });
 
-        conn.on('close', () => {
-            console.log('[PEER] Disconnected from net-deck');
-            onLogCallback?.('[NET] Net-deck disconnected');
-        });
-
-        conn.on('error', (err) => {
-            console.error('[PEER] Connection error:', err);
-            onLogCallback?.(`[ERR] Connection error: ${err.message}`);
-        });
-    });
-
-    peer.on('error', (err) => {
-        console.error('[PEER] Peer error:', err);
-        onLogCallback?.(`[ERR] Peer error: ${err.message}`);
-    });
-
-    peer.on('disconnected', () => {
-        console.log('[PEER] Disconnected from signaling server, reconnecting...');
-        onLogCallback?.('[NET] Disconnected, reconnecting...');
-        peer.reconnect();
-    });
-
-    peer.on('close', () => {
-        console.log('[PEER] Desktop peer destroyed');
-    });
-
-    // Listen for incoming connections (fallback if mobile connects to us)
-    peer.on('connection', (incomingConn) => {
-        console.log('[PEER] Incoming connection from:', incomingConn.peer);
-        onLogCallback?.(`[NET] Incoming from: ${incomingConn.peer}`);
-        
-        incomingConn.on('data', (data) => {
+        // Listen for data from mobile (OVERRIDE command)
+        conn.on('data', (data) => {
+            console.log('[DESKTOP] Received data:', data);
             if (data.action === 'OVERRIDE' && data.code === SECRET_CODE) {
-                console.log('[PEER] Valid override code received');
-                onOverrideCallback?.();
-            } else if (data.action === 'OVERRIDE') {
-                console.log('[PEER] Invalid override code:', data.code);
+                console.log('[DESKTOP] Valid OVERRIDE received from mobile');
+                if (typeof onOverrideCallback === 'function') {
+                    onOverrideCallback();
+                }
             }
         });
 
-        incomingConn.on('close', () => {
-            console.log('[PEER] Incoming connection closed');
+        conn.on('error', (err) => {
+            console.error('[DESKTOP] Connection error:', err);
+        });
+
+        conn.on('close', () => {
+            console.log('[DESKTOP] Connection closed by mobile');
+            updateDesktopStatus(false);
         });
     });
 
-    return peer;
+    // Also handle incoming connections (fallback if mobile connects to us)
+    desktopPeer.on('connection', (incomingConn) => {
+        console.log('[DESKTOP] Incoming connection from Mobile:', incomingConn.peer);
+        conn = incomingConn;
+
+        conn.on('open', () => {
+            console.log('[DESKTOP] Incoming connection from Mobile established!');
+            updateDesktopStatus(true);
+        });
+
+        conn.on('data', (data) => {
+            console.log('[DESKTOP] Received data on incoming:', data);
+            if (data.action === 'OVERRIDE' && data.code === SECRET_CODE) {
+                console.log('[DESKTOP] Valid OVERRIDE received on incoming connection');
+                if (typeof onOverrideCallback === 'function') {
+                    onOverrideCallback();
+                }
+            }
+        });
+
+        conn.on('close', () => {
+            console.log('[DESKTOP] Incoming connection closed');
+            updateDesktopStatus(false);
+        });
+
+        conn.on('error', (err) => {
+            console.error('[DESKTOP] Incoming connection error:', err);
+        });
+    });
+
+    desktopPeer.on('error', (err) => {
+        console.error('[DESKTOP] Peer error:', err);
+    });
+
+    desktopPeer.on('disconnected', () => {
+        console.log('[DESKTOP] Disconnected from signaling server, reconnecting...');
+        desktopPeer.reconnect();
+    });
+
+    desktopPeer.on('close', () => {
+        console.log('[DESKTOP] Peer destroyed');
+    });
+
+    return desktopPeer;
 }
 
 // --- PeerJS Helper (Mobile - Listens for Desktop) ---
 function initMobilePeer(onConnectedCallback, onErrorCallback, onLogCallback) {
     if (typeof Peer === 'undefined') {
-        console.error('[PEER] PeerJS not loaded');
+        console.error('[MOBILE] PeerJS not loaded');
         onErrorCallback?.(new Error('PeerJS not loaded'));
         onLogCallback?.('[ERR] PeerJS not loaded');
         return null;
     }
 
-    // Mobile generates the session ID and acts as listener
+    // Mobile generates the session ID and acts as LISTENER
     const sessionId = generateSessionId();
-    console.log('[PEER] Mobile session ID:', sessionId);
+    console.log('[MOBILE] Net-Deck Session ID:', sessionId);
     onLogCallback?.(`[NET-DECK] Session ID: ${sessionId}`);
 
     const peer = new Peer(sessionId, PEER_CONFIG);
-    let conn = null;
+    let connections = new Set(); // Track all active connections
 
     peer.on('open', (id) => {
-        console.log('[PEER] Mobile peer listening on ID:', id);
+        console.log('[MOBILE] Peer listening on ID:', id);
         onLogCallback?.(`[NET-DECK] Listening for terminal...`);
     });
 
-    peer.on('connection', (incomingConn) => {
-        console.log('[PEER] Terminal connected:', incomingConn.peer);
-        conn = incomingConn;
+    // Handle INCOMING connections from Desktop
+    peer.on('connection', (conn) => {
+        console.log('[MOBILE] Terminal connected:', conn.peer);
+        connections.add(conn);
         onLogCallback?.('[NET-DECK] Terminal connected');
         onConnectedCallback?.();
 
-        incomingConn.on('data', (data) => {
+        conn.on('data', (data) => {
             // Handle any data from desktop if needed
-            console.log('[PEER] Data from terminal:', data);
+            console.log('[MOBILE] Data from terminal:', data);
         });
 
-        incomingConn.on('close', () => {
-            console.log('[PEER] Terminal disconnected');
+        conn.on('close', () => {
+            console.log('[MOBILE] Terminal disconnected');
+            connections.delete(conn);
             onLogCallback?.('[NET-DECK] Terminal disconnected');
         });
 
-        incomingConn.on('error', (err) => {
-            console.error('[PEER] Connection error:', err);
+        conn.on('error', (err) => {
+            console.error('[MOBILE] Connection error:', err);
             onLogCallback?.(`[ERR] Connection error: ${err.message}`);
         });
     });
 
     peer.on('error', (err) => {
-        console.error('[PEER] Mobile peer error:', err);
+        console.error('[MOBILE] Peer error:', err);
         onLogCallback?.(`[ERR] Peer error: ${err.message}`);
         onErrorCallback?.(err);
     });
 
     peer.on('disconnected', () => {
-        console.log('[PEER] Disconnected from signaling server, reconnecting...');
+        console.log('[MOBILE] Disconnected from signaling server, reconnecting...');
         onLogCallback?.('[NET] Disconnected, reconnecting...');
         peer.reconnect();
     });
 
     peer.on('close', () => {
-        console.log('[PEER] Mobile peer destroyed');
+        console.log('[MOBILE] Peer destroyed');
     });
 
+    // Send OVERRIDE to ALL active connections
     function sendOverride(code) {
-        if (conn && conn.open) {
-            conn.send({ action: 'OVERRIDE', code });
-            console.log('[PEER] Override sent to terminal:', code);
-            return true;
+        let sent = false;
+        connections.forEach(conn => {
+            if (conn && conn.open) {
+                conn.send({ action: 'OVERRIDE', code });
+                console.log('[MOBILE] Override sent to terminal:', code);
+                sent = true;
+            }
+        });
+        if (!sent) {
+            console.warn('[MOBILE] Cannot send override - no active connections');
         }
-        console.warn('[PEER] Cannot send override - no active connection');
-        return false;
+        return sent;
     }
 
     function getSessionId() {
