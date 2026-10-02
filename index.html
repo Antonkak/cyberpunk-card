@@ -830,8 +830,6 @@
         </div>
     </div>
 
-    <!-- PeerJS CDN -->
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <!-- Shared Script -->
     <script src="script.js"></script>
     <!-- Desktop Script -->
@@ -846,10 +844,11 @@
         const sessionIdDisplay = document.getElementById('session-id-display');
         const mobileUrlDisplay = document.getElementById('mobile-url-display');
         const connectionStatus = document.getElementById('connection-status');
+        const statusLine = document.querySelector('.status-line');
 
         // Initialize
         let cleanupArasakaLogs = null;
-        let desktopPeer = null;
+        let desktopClient = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             // Start Arasaka init logs
@@ -876,13 +875,22 @@
                 connectionStatus.textContent = 'CONNECTING TO NET-DECK...';
                 connectionStatus.className = 'connection-status waiting';
                 
-                console.log('[DESKTOP] Target Mobile ID found in URL:', targetId);
+                statusLine.textContent = '[ CONNECTING TO NET-DECK SESSION: ' + targetId + ' ]';
+                statusLine.classList.add('waiting');
                 
-                // Initialize PeerJS connection to mobile
-                desktopPeer = initDesktopPeer(targetId, async () => {
+                console.log('[DESKTOP] Target Session ID found in URL:', targetId);
+                
+                // Initialize WebSocket connection to mobile
+                desktopClient = initDesktopClient(async () => {
                     // Valid override received from mobile
+                    if (desktopClient) {
+                        desktopClient.disconnect();
+                    }
                     await glitchEffect('NET-DECK SIGNAL RECEIVED\nOVERRIDE EXECUTED');
                     switchToEdgerunners();
+                }, (message) => {
+                    console.log('[DESKTOP] Debug log:', message);
+                    connectionStatus.textContent = message;
                 });
             } else {
                 // No session ID in URL
