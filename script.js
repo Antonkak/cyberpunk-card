@@ -478,7 +478,10 @@ function initMobilePeer(onConnectedCallback, onErrorCallback, onLogCallback) {
     console.log('[MOBILE] Net-Deck Session ID:', sessionId);
     onLogCallback?.(`[NET-DECK] Session ID: ${sessionId}`);
 
-    const peer = new Peer(sessionId, PEER_OPTIONS);
+    const peer = new Peer({
+    ...PEER_OPTIONS,
+    debug: 3
+    });
     let connections = new Set(); // Track all active connections
     let reconnectAttempts = 0;
     let isReconnecting = false;
