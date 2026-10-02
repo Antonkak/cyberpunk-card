@@ -10,12 +10,17 @@ const BLUEPRINTS = [
     "resourses/stage3_paint_process.png"
 ];
 
-// PeerJS Configuration with STUN servers for NAT traversal
+// PeerJS Configuration with expanded STUN servers for NAT traversal
 const PEER_CONFIG = {
     config: {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' },
+            { urls: 'stun:stun.cloudflare.com:3478' },
+            { urls: 'stun:stun.mit.de:3478' }
         ]
     }
 };
@@ -268,7 +273,7 @@ function updateDesktopStatus(connected) {
     });
 }
 
-// --- PeerJS Helper (Desktop - Connects to Mobile) ---
+// --- PeerJS Helper (Desktop - Connects to Mobile with Retry Loop) ---
 function initDesktopPeer(targetMobileId, onOverrideCallback) {
     if (typeof Peer === 'undefined') {
         console.error('[DESKTOP] PeerJS not loaded');
@@ -285,20 +290,27 @@ function initDesktopPeer(targetMobileId, onOverrideCallback) {
     // Desktop creates peer with auto-generated ID
     const desktopPeer = new Peer(undefined, PEER_CONFIG);
     let conn = null;
+    let connectionAttempts = 0;
+    const MAX_CONNECTION_ATTEMPTS = 5;
+    const CONNECTION_RETRY_DELAY = 2000; // 2 seconds
 
-    desktopPeer.on('open', (id) => {
-        console.log('[DESKTOP] Peer opened with ID:', id);
-        console.log('[DESKTOP] Connecting to Mobile Net-Deck:', targetMobileId);
+    function attemptConnection() {
+        if (connectionAttempts >= MAX_CONNECTION_ATTEMPTS) {
+            console.error('[DESKTOP] Max connection attempts reached. Check if mobile is online.');
+            return;
+        }
 
-        // CRITICAL: Connect STRICTLY inside 'open' event
+        connectionAttempts++;
+        console.log(`[DESKTOP] Connection attempt ${connectionAttempts}/${MAX_CONNECTION_ATTEMPTS} to ${targetMobileId}`);
+
         conn = desktopPeer.connect(targetMobileId, { reliable: true });
 
         conn.on('open', () => {
             console.log('[DESKTOP] P2P Connection established!');
             updateDesktopStatus(true);
+            connectionAttempts = 0; // Reset on success
         });
 
-        // Listen for data from mobile (OVERRIDE command)
         conn.on('data', (data) => {
             console.log('[DESKTOP] Received data:', data);
             if (data.action === 'OVERRIDE' && data.code === SECRET_CODE) {
@@ -316,7 +328,19 @@ function initDesktopPeer(targetMobileId, onOverrideCallback) {
         conn.on('close', () => {
             console.log('[DESKTOP] Connection closed by mobile');
             updateDesktopStatus(false);
+            
+            // If peer is still open, retry connection
+            if (!desktopPeer.destroyed && !desktopPeer.disconnected) {
+                console.log('[DESKTOP] Scheduling reconnection attempt...');
+                setTimeout(attemptConnection, CONNECTION_RETRY_DELAY);
+            }
         });
+    }
+
+    desktopPeer.on('open', (id) => {
+        console.log('[DESKTOP] Peer opened with ID:', id);
+        console.log('[DESKTOP] Connecting to Mobile Net-Deck:', targetMobileId);
+        attemptConnection();
     });
 
     // Also handle incoming connections (fallback if mobile connects to us)
@@ -327,6 +351,7 @@ function initDesktopPeer(targetMobileId, onOverrideCallback) {
         conn.on('open', () => {
             console.log('[DESKTOP] Incoming connection from Mobile established!');
             updateDesktopStatus(true);
+            connectionAttempts = 0;
         });
 
         conn.on('data', (data) => {
@@ -362,10 +387,13 @@ function initDesktopPeer(targetMobileId, onOverrideCallback) {
         console.log('[DESKTOP] Peer destroyed');
     });
 
+    // Expose reconnect function for external use
+    desktopPeer.reconnectToMobile = attemptConnection;
+
     return desktopPeer;
 }
 
-// --- PeerJS Helper (Mobile - Listens for Desktop) ---
+// --- PeerJS Helper (Mobile - Listens for Desktop with Resilience) ---
 function initMobilePeer(onConnectedCallback, onErrorCallback, onLogCallback) {
     if (typeof Peer === 'undefined') {
         console.error('[MOBILE] PeerJS not loaded');
@@ -382,6 +410,23 @@ function initMobilePeer(onConnectedCallback, onErrorCallback, onLogCallback) {
     const peer = new Peer(sessionId, PEER_CONFIG);
     let connections = new Set(); // Track all active connections
 
+    // Handle visibility change - reconnect when tab becomes active again
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            if (peer.disconnected || peer.destroyed) {
+                console.log('[NET-DECK] Tab active again, reconnecting peer...');
+                onLogCallback?.('[NET-DECK] Tab focused, reconnecting...');
+                peer.reconnect();
+            } else if (connections.size === 0) {
+                // No active connections, but peer is alive - log status
+                console.log('[NET-DECK] Tab active, waiting for terminal...');
+                onLogCallback?.('[NET-DECK] Tab active, awaiting terminal...');
+            }
+        } else {
+            console.log('[NET-DECK] Tab hidden, keeping connection alive...');
+        }
+    });
+
     peer.on('open', (id) => {
         console.log('[MOBILE] Peer listening on ID:', id);
         onLogCallback?.(`[NET-DECK] Listening for terminal...`);
@@ -395,7 +440,6 @@ function initMobilePeer(onConnectedCallback, onErrorCallback, onLogCallback) {
         onConnectedCallback?.();
 
         conn.on('data', (data) => {
-            // Handle any data from desktop if needed
             console.log('[MOBILE] Data from terminal:', data);
         });
 
@@ -420,7 +464,12 @@ function initMobilePeer(onConnectedCallback, onErrorCallback, onLogCallback) {
     peer.on('disconnected', () => {
         console.log('[MOBILE] Disconnected from signaling server, reconnecting...');
         onLogCallback?.('[NET] Disconnected, reconnecting...');
-        peer.reconnect();
+        // PeerJS auto-reconnects, but we can force it
+        setTimeout(() => {
+            if (peer.disconnected && !peer.destroyed) {
+                peer.reconnect();
+            }
+        }, 1000);
     });
 
     peer.on('close', () => {
@@ -447,7 +496,6 @@ function initMobilePeer(onConnectedCallback, onErrorCallback, onLogCallback) {
         return sessionId;
     }
 
-    // Use the shared generateDesktopUrl function
     function generateDesktopUrlWrapper() {
         return generateDesktopUrl(sessionId);
     }
