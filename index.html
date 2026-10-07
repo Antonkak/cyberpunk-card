@@ -902,6 +902,21 @@
 
         // Switch to Edgerunners Theme
         async function switchToEdgerunners() {
+            // Start audio immediately after glitch effect
+            const audioPlayer = document.getElementById('audio-player');
+            const playBtn = document.getElementById('play-transmission');
+            const volumeSlider = document.getElementById('volume-slider');
+            
+            if (audioPlayer) {
+                audioPlayer.volume = volumeSlider ? volumeSlider.value / 100 : 0.5;
+                try {
+                    await audioPlayer.play();
+                    if (playBtn) playBtn.innerHTML = '&#10074;&#10074; PAUSE';
+                } catch (e) {
+                    console.log("Autoplay policy blocked sound:", e);
+                }
+            }
+
             // Update connection status
             if (connectionStatus) {
                 connectionStatus.textContent = 'NET-DECK CONNECTED - OVERRIDE EXECUTED';
@@ -920,21 +935,6 @@
 
             // Show Edgerunners UI
             edgerunnersTheme.classList.add('active');
-
-            // Start audio
-            const audioPlayer = document.getElementById('audio-player');
-            const playBtn = document.getElementById('play-transmission');
-            const volumeSlider = document.getElementById('volume-slider');
-            
-            if (audioPlayer) {
-                audioPlayer.volume = volumeSlider ? volumeSlider.value / 100 : 0.5;
-                try {
-                    await audioPlayer.play();
-                    if (playBtn) playBtn.innerHTML = '&#10074;&#10074; PAUSE';
-                } catch (e) {
-                    console.log("Autoplay policy blocked sound:", e);
-                }
-            }
 
             // Add dev logs
             await addDevLogs('dev-logs', [
