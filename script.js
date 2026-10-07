@@ -282,7 +282,7 @@ function updateDesktopStatus(connected) {
 // ============================================================
 
 class WSSClient {
-    constructor(onMessageCallback, onStatusCallback, onLogCallback) {
+    constructor(onConnectedCallback, onMessageCallback, onStatusCallback, onLogCallback) {
         this.url = WSS_URL;
         this.socket = null;
         this.roomId = null;
@@ -292,6 +292,7 @@ class WSSClient {
         this.reconnectTimer = null;
         this.shouldReconnect = true;
         
+        this.onConnectedCallback = onConnectedCallback;
         this.onMessageCallback = onMessageCallback;
         this.onStatusCallback = onStatusCallback; // 'connecting', 'connected', 'disconnected', 'error'
         this.onLogCallback = onLogCallback;
@@ -383,9 +384,12 @@ class WSSClient {
             case 'CONNECTED': {
                 console.log('[WSS] Room CONNECTED - both clients present');
                 this.onLogCallback?.('[WSS] Terminal linked!');
+                this.onStatusCallback?.('connected');
                 if (this.clientType === 'desktop') {
-                    this.onStatusCallback?.('connected');
                     updateDesktopStatus(true);
+                }
+                if (this.onConnectedCallback) {
+                    this.onConnectedCallback();
                 }
                 break;
             }
@@ -492,6 +496,8 @@ function initMobileClient(onConnectedCallback, onErrorCallback, onLogCallback) {
     onLogCallback?.(`[NET-DECK] Session ID: ${sessionId}`);
 
     const wssClient = new WSSClient(
+        // onConnectedCallback
+        onConnectedCallback,
         // onMessage - handle OVERRIDE from server (mobile doesn't expect OVERRIDE, but keep for symmetry)
         (message) => {
             if (message.action === 'OVERRIDE') {
@@ -558,6 +564,8 @@ function initDesktopClient(onOverrideCallback, onLogCallback) {
     onLogCallback?.(`[DESKTOP] Connecting to: ${targetRoomId}`);
 
     const wssClient = new WSSClient(
+        // onConnectedCallback (not used for desktop, but required by constructor)
+        null,
         // onMessage - handle OVERRIDE from mobile
         (message) => {
             if (message.action === 'OVERRIDE' && message.code === SECRET_CODE) {
