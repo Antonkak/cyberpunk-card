@@ -668,6 +668,21 @@
             margin: 15px 0;
         }
 
+        .track-nav.track-nav-top {
+            justify-content: space-between;
+            margin: 0 0 15px 0;
+            padding: 0 8px;
+        }
+
+        .track-info-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            flex: 1;
+            text-align: center;
+        }
+
         .track-nav-btn {
             background: var(--er-cyan);
             color: var(--er-black);
@@ -881,8 +896,14 @@
                 <h2>Transmission Audio</h2>
                 <div class="audio-player">
                     <div class="audio-track-info">
-                        <div class="track-title" id="track-title">I Really Want to Stay at Your House</div>
-                        <div class="track-artist" id="track-artist">Rosa Walton & Hallie Coggins</div>
+                        <div class="track-nav track-nav-top">
+                            <button class="track-nav-btn" id="track-prev" title="Previous track">&#9668;</button>
+                            <div class="track-info-wrapper">
+                                <div class="track-title" id="track-title">I Really Want to Stay at Your House</div>
+                                <div class="track-artist" id="track-artist">Rosa Walton & Hallie Coggins</div>
+                            </div>
+                            <button class="track-nav-btn" id="track-next" title="Next track">&#9658;</button>
+                        </div>
                     </div>
                     <div class="audio-controls">
                         <button class="play-btn" id="play-transmission">&#9654; PLAY</button>
@@ -892,9 +913,7 @@
                         <div class="time-info" id="time-info">0:00 / 0:00</div>
                     </div>
                     <div class="track-nav">
-                        <button class="track-nav-btn" id="track-prev" title="Previous track">&#9668;</button>
                         <select id="track-select" class="track-select"></select>
-                        <button class="track-nav-btn" id="track-next" title="Next track">&#9658;</button>
                     </div>
                     <div class="volume-container">
                         <span class="volume-icon">&#128266;</span>
