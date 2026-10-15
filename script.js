@@ -6,9 +6,10 @@
 // --- Configuration ---
 const SECRET_CODE = "2077";
 const BLUEPRINTS = [
-    "resourses/stage1_box_unfold.png",
-    "resourses/stage2_figma_mockup.png",
-    "resourses/stage3_paint_process.png"
+    "resourses/box_front.pdf",
+    "resourses/box_left.pdf",
+    "resourses/box_right.pdf",
+    "resourses/box_up.pdf"
 ];
 
 // WebSocket Signaling Server
@@ -183,15 +184,30 @@ function initGallery() {
 
     let currentIndex = 0;
 
-    function updateImage() {
-        galleryImage.src = BLUEPRINTS[currentIndex];
-        const fileName = BLUEPRINTS[currentIndex].split('/').pop();
+    function updateContent() {
+        const src = BLUEPRINTS[currentIndex];
+        const fileName = src.split('/').pop();
         galleryCaption.textContent = `FILE [${currentIndex + 1}/${BLUEPRINTS.length}]: ${fileName}`;
+        
+        // Replace img with iframe for PDF
+        if (galleryImage.tagName === 'IMG') {
+            const iframe = document.createElement('iframe');
+            iframe.id = 'gallery-image';
+            iframe.className = 'gallery-image';
+            iframe.style.width = '100%';
+            iframe.style.height = '70vh';
+            iframe.style.border = '2px solid var(--er-yellow)';
+            iframe.style.borderRadius = '5px';
+            iframe.style.boxShadow = '0 0 30px var(--er-yellow)';
+            galleryImage.parentNode.replaceChild(iframe, galleryImage);
+            galleryImage = iframe;
+        }
+        galleryImage.src = src;
     }
 
     function openGallery() {
         currentIndex = 0;
-        updateImage();
+        updateContent();
         galleryOverlay.classList.add('active');
     }
 
@@ -201,12 +217,12 @@ function initGallery() {
 
     function prev() {
         currentIndex = (currentIndex - 1 + BLUEPRINTS.length) % BLUEPRINTS.length;
-        updateImage();
+        updateContent();
     }
 
     function next() {
         currentIndex = (currentIndex + 1) % BLUEPRINTS.length;
-        updateImage();
+        updateContent();
     }
 
     viewBlueprintsBtn?.addEventListener('click', openGallery);
