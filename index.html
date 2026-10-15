@@ -121,7 +121,7 @@
             padding: 0 20px;
         }
 
-        /* Container Card*/
+        /* Container Card */
         .info-card {
             background: rgba(13, 13, 13, 0.85);
             border: 1px solid var(--border-color);
@@ -629,6 +629,38 @@
             cursor: pointer;
         }
 
+        /* Track Selector */
+        .track-selector {
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .track-select {
+            background: var(--er-black);
+            color: var(--er-yellow);
+            border: 1px solid var(--er-cyan);
+            font-family: 'Orbitron', monospace;
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            border-radius: 3px;
+            width: 100%;
+            max-width: 400px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .track-select:focus {
+            outline: none;
+            border-color: var(--er-yellow);
+            box-shadow: 0 0 10px var(--er-yellow);
+        }
+
+        .track-select option {
+            background: var(--er-black);
+            color: var(--er-yellow);
+        }
+
         /* Dev Logs */
         .dev-log {
             font-family: 'Courier New', monospace;
@@ -777,7 +809,7 @@
             <div class="er-section">
                 <h2>Personal Transmission</h2>
                 <div class="birthday-message">
-                    HAPPY BIRTHDAY, KSHK! - FROM YOUR EDGERUNNERS
+                    HAPPY BIRTHDAY, CHROMA! - FROM YOUR EDGERUNNERS
                 </div>
             </div>
 
@@ -795,8 +827,8 @@
                 <h2>Transmission Audio</h2>
                 <div class="audio-player">
                     <div class="audio-track-info">
-                        <div class="track-title">I Really Want to Stay at Your House</div>
-                        <div class="track-artist">Rosa Walton & Hallie Coggins</div>
+                        <div class="track-title" id="track-title">I Really Want to Stay at Your House</div>
+                        <div class="track-artist" id="track-artist">Rosa Walton & Hallie Coggins</div>
                     </div>
                     <div class="audio-controls">
                         <button class="play-btn" id="play-transmission">&#9654; PLAY</button>
@@ -804,6 +836,9 @@
                             <div class="progress-fill" id="progress-fill"></div>
                         </div>
                         <div class="time-info" id="time-info">0:00 / 0:00</div>
+                    </div>
+                    <div class="track-selector">
+                        <select id="track-select" class="track-select"></select>
                     </div>
                     <div class="volume-container">
                         <span class="volume-icon">&#128266;</span>

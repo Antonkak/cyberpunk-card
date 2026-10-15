@@ -12,6 +12,17 @@ const BLUEPRINTS = [
     "resourses/box_up.pdf"
 ];
 
+// Audio Playlist
+const PLAYLIST = [
+    { title: 'I Really Want to Stay at Your House', artist: 'Rosa Walton & Hallie Coggins', file: 'stay_at_your_house.mp3', type: 'audio/mpeg' },
+    { title: 'Cyberpunk Edgerunners Opening Credits', artist: 'Netflix', file: 'Cyberpunk Edgerunners  Opening Credits  Netflix_1.m4a', type: 'audio/mp4' },
+    { title: 'Let You Down', artist: 'Dawid Podsiadło', file: 'Dawid Podsiadlo - Let You Down.mp3', type: 'audio/mpeg' },
+    { title: 'The Rebel Path', artist: 'P.T. Adamczyk', file: 'cyberpunk_2077_03 - P.T. Adamczyk - The Rebel Path.mp3', type: 'audio/mpeg' },
+    { title: 'Spoiler', artist: 'Hyper', file: 'Hyper - Spoiler.mp3', type: 'audio/mpeg' },
+    { title: 'Chippin\' In', artist: 'Samurai', file: 'Samurai - Chippin In.mp3', type: 'audio/mpeg' },
+    { title: 'Never Fade Away', artist: 'Samurai', file: 'Samurai - Never Fade Away.mp3', type: 'audio/mpeg' }
+];
+
 // WebSocket Signaling Server
 const WSS_URL = 'wss://terminalac.cyberlation.net/ws';
 
@@ -123,8 +134,51 @@ function initAudioPlayer() {
     const progressFill = document.getElementById('progress-fill');
     const timeInfo = document.getElementById('time-info');
     const volumeSlider = document.getElementById('volume-slider');
+    const trackSelect = document.getElementById('track-select');
+    const trackTitle = document.getElementById('track-title');
+    const trackArtist = document.getElementById('track-artist');
 
     if (!playBtn || !audioPlayer) return;
+
+    let currentTrackIndex = 0;
+    let isUserSeeking = false;
+
+    // Populate track selector
+    if (trackSelect) {
+        PLAYLIST.forEach((track, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = `${track.title} — ${track.artist}`;
+            trackSelect.appendChild(option);
+        });
+
+        trackSelect.addEventListener('change', () => {
+            currentTrackIndex = parseInt(trackSelect.value, 10);
+            loadTrack(currentTrackIndex);
+            audioPlayer.play();
+        });
+    }
+
+    function loadTrack(index) {
+        const track = PLAYLIST[index];
+        if (!track) return;
+
+        currentTrackIndex = index;
+        audioPlayer.src = `resourses/${track.file}`;
+        audioPlayer.type = track.type;
+        
+        if (trackTitle) trackTitle.textContent = track.title;
+        if (trackArtist) trackArtist.textContent = track.artist;
+        if (trackSelect) trackSelect.value = index;
+        
+        audioPlayer.load();
+    }
+
+    function playNext() {
+        const nextIndex = (currentTrackIndex + 1) % PLAYLIST.length;
+        loadTrack(nextIndex);
+        audioPlayer.play();
+    }
 
     playBtn.addEventListener('click', () => {
         if (audioPlayer.paused) {
@@ -137,7 +191,7 @@ function initAudioPlayer() {
     });
 
     audioPlayer.addEventListener('timeupdate', () => {
-        if (!audioPlayer.duration) return;
+        if (!audioPlayer.duration || isUserSeeking) return;
         const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
         progressFill.style.width = `${percent}%`;
         timeInfo.textContent = `${formatTime(audioPlayer.currentTime)} / ${formatTime(audioPlayer.duration)}`;
@@ -148,12 +202,13 @@ function initAudioPlayer() {
     });
 
     audioPlayer.addEventListener('ended', () => {
-        playBtn.innerHTML = '&#9654; PLAY';
-        progressFill.style.width = '0%';
+        playNext();
     });
 
-    progressContainer.addEventListener('click', (e) => {
+    progressContainer.addEventListener('mousedown', () => { isUserSeeking = true; });
+    progressContainer.addEventListener('mouseup', (e) => {
         if (!audioPlayer.duration) return;
+        isUserSeeking = false;
         const width = progressContainer.clientWidth;
         const clickX = e.offsetX;
         audioPlayer.currentTime = (clickX / width) * audioPlayer.duration;
@@ -166,7 +221,10 @@ function initAudioPlayer() {
     return {
         play: () => audioPlayer.play(),
         pause: () => audioPlayer.pause(),
-        setVolume: (v) => { audioPlayer.volume = v; volumeSlider.value = v * 100; }
+        setVolume: (v) => { audioPlayer.volume = v; volumeSlider.value = v * 100; },
+        loadTrack,
+        playNext,
+        getCurrentTrack: () => PLAYLIST[currentTrackIndex]
     };
 }
 
