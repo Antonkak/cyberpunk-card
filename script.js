@@ -173,7 +173,7 @@ function initAudioPlayer() {
 // --- Blueprints Gallery ---
 function initGallery() {
     const galleryOverlay = document.getElementById('gallery-overlay');
-    const galleryImage = document.getElementById('gallery-image');
+    let galleryImage = document.getElementById('gallery-image');
     const galleryCaption = document.getElementById('gallery-caption');
     const galleryClose = document.getElementById('gallery-close');
     const galleryPrev = document.getElementById('gallery-prev');
