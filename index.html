@@ -444,9 +444,9 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.92);
+            width: 100vw;
+            height: 100vh;
+            background: #000;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -463,20 +463,24 @@
 
         .gallery-container {
             position: relative;
-            max-width: 90vw;
-            max-height: 85vh;
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
         }
 
         .gallery-image {
-            max-width: 100%;
-            max-height: 70vh;
-            border: 2px solid var(--er-yellow);
-            border-radius: 5px;
-            box-shadow: 0 0 30px var(--er-yellow);
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
             object-fit: contain;
+            background: #000;
         }
 
         .gallery-controls {
@@ -487,19 +491,35 @@
         }
 
         .gallery-nav-btn {
-            background: var(--er-yellow);
-            color: var(--er-black);
-            border: none;
-            padding: 8px 18px;
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--er-yellow);
+            border: 2px solid var(--er-yellow);
+            padding: 12px 20px;
             font-family: 'Orbitron', monospace;
             font-weight: 700;
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.2s;
+            z-index: 2001;
+            border-radius: 3px;
+            backdrop-filter: blur(4px);
         }
 
         .gallery-nav-btn:hover {
-            background: var(--er-cyan);
-            box-shadow: 0 0 10px var(--er-cyan);
+            background: var(--er-yellow);
+            color: var(--er-black);
+            box-shadow: 0 0 25px var(--er-yellow);
+        }
+
+        .gallery-nav-btn#gallery-prev {
+            left: 20px;
+        }
+
+        .gallery-nav-btn#gallery-next {
+            right: 20px;
         }
 
         .gallery-caption {
@@ -510,17 +530,27 @@
         }
 
         .gallery-close {
-            position: absolute;
-            top: -45px;
-            right: 0;
+            position: fixed;
+            top: 20px;
+            right: 20px;
             background: var(--arasaka-red);
             color: var(--text-white);
             border: none;
-            padding: 8px 16px;
+            padding: 12px 20px;
             font-family: 'Orbitron', monospace;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: 700;
+            z-index: 2001;
+            border-radius: 3px;
+            box-shadow: 0 0 15px var(--arasaka-red);
+            transition: all 0.2s;
+        }
+
+        .gallery-close:hover {
+            background: var(--er-yellow);
+            color: var(--er-black);
+            box-shadow: 0 0 25px var(--er-yellow);
         }
 
         /* Audio Player */
@@ -630,9 +660,33 @@
         }
 
         /* Track Selector */
-        .track-selector {
+        .track-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
             margin: 15px 0;
-            text-align: center;
+        }
+
+        .track-nav-btn {
+            background: var(--er-cyan);
+            color: var(--er-black);
+            border: 2px solid var(--er-cyan);
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            font-weight: 700;
+            padding: 6px 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 3px;
+            box-shadow: 0 0 10px var(--er-cyan);
+            min-width: 44px;
+        }
+
+        .track-nav-btn:hover {
+            background: transparent;
+            color: var(--er-cyan);
+            box-shadow: 0 0 20px var(--er-cyan);
         }
 
         .track-select {
@@ -644,7 +698,7 @@
             padding: 8px 12px;
             border-radius: 3px;
             width: 100%;
-            max-width: 400px;
+            max-width: 380px;
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -837,8 +891,10 @@
                         </div>
                         <div class="time-info" id="time-info">0:00 / 0:00</div>
                     </div>
-                    <div class="track-selector">
+                    <div class="track-nav">
+                        <button class="track-nav-btn" id="track-prev" title="Previous track">&#9668;</button>
                         <select id="track-select" class="track-select"></select>
+                        <button class="track-nav-btn" id="track-next" title="Next track">&#9658;</button>
                     </div>
                     <div class="volume-container">
                         <span class="volume-icon">&#128266;</span>

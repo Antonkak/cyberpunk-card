@@ -135,6 +135,8 @@ function initAudioPlayer() {
     const timeInfo = document.getElementById('time-info');
     const volumeSlider = document.getElementById('volume-slider');
     const trackSelect = document.getElementById('track-select');
+    const trackPrev = document.getElementById('track-prev');
+    const trackNext = document.getElementById('track-next');
     const trackTitle = document.getElementById('track-title');
     const trackArtist = document.getElementById('track-artist');
 
@@ -155,6 +157,22 @@ function initAudioPlayer() {
         trackSelect.addEventListener('change', () => {
             currentTrackIndex = parseInt(trackSelect.value, 10);
             loadTrack(currentTrackIndex);
+            audioPlayer.play();
+        });
+    }
+
+    // Track navigation buttons
+    if (trackPrev) {
+        trackPrev.addEventListener('click', () => {
+            const prevIndex = (currentTrackIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
+            loadTrack(prevIndex);
+            audioPlayer.play();
+        });
+    }
+    if (trackNext) {
+        trackNext.addEventListener('click', () => {
+            const nextIndex = (currentTrackIndex + 1) % PLAYLIST.length;
+            loadTrack(nextIndex);
             audioPlayer.play();
         });
     }
@@ -247,30 +265,35 @@ function initGallery() {
         const fileName = src.split('/').pop();
         galleryCaption.textContent = `FILE [${currentIndex + 1}/${BLUEPRINTS.length}]: ${fileName}`;
         
-        // Replace img with iframe for PDF
+        // Replace img with iframe for PDF - full screen with fit
         if (galleryImage.tagName === 'IMG') {
             const iframe = document.createElement('iframe');
             iframe.id = 'gallery-image';
             iframe.className = 'gallery-image';
-            iframe.style.width = '100%';
-            iframe.style.height = '70vh';
-            iframe.style.border = '2px solid var(--er-yellow)';
-            iframe.style.borderRadius = '5px';
-            iframe.style.boxShadow = '0 0 30px var(--er-yellow)';
+            iframe.style.width = '100vw';
+            iframe.style.height = '100vh';
+            iframe.style.border = 'none';
+            iframe.style.borderRadius = '0';
+            iframe.style.boxShadow = 'none';
+            iframe.style.background = '#000';
             galleryImage.parentNode.replaceChild(iframe, galleryImage);
             galleryImage = iframe;
         }
-        galleryImage.src = src;
+        // Use browser PDF viewer with fit-to-page
+        galleryImage.src = src + '#view=FitH&toolbar=0&navpanes=0';
     }
 
     function openGallery() {
         currentIndex = 0;
         updateContent();
         galleryOverlay.classList.add('active');
+        // Hide body scroll
+        document.body.style.overflow = 'hidden';
     }
 
     function closeGallery() {
         galleryOverlay.classList.remove('active');
+        document.body.style.overflow = '';
     }
 
     function prev() {
@@ -289,6 +312,14 @@ function initGallery() {
     galleryNext?.addEventListener('click', next);
     galleryOverlay?.addEventListener('click', (e) => {
         if (e.target === galleryOverlay) closeGallery();
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (!galleryOverlay.classList.contains('active')) return;
+        if (e.key === 'ArrowLeft') prev();
+        if (e.key === 'ArrowRight') next();
+        if (e.key === 'Escape') closeGallery();
     });
 
     return { open: openGallery, close: closeGallery };
