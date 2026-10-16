@@ -9,7 +9,9 @@ const BLUEPRINTS = [
     "resourses/box_front.pdf",
     "resourses/box_left.pdf",
     "resourses/box_right.pdf",
-    "resourses/box_up.pdf"
+    "resourses/box_up.pdf",
+    "resourses/david_ref.jpg",
+    "resourses/luci_ref_1.jpg"
 ];
 
 // Audio Playlist
